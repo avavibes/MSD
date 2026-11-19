@@ -1,23 +1,17 @@
-// pub struct View{
-//     center: (i32,i32),
-//     viewport: (u32, u32),
-//     divisions: (u8,u8),
-// }
-// impl View{
+use crate::sensors::core::utils::View;
 
-//     pub fn get_subdivision(&self, x: u8, y: u8) -> (i32, i32, u32, u32){
-//         let x_sw = self.viewport.0/(self.divisions.0 as u32);
-//         let y_sw = self.viewport.1/(self.divisions.1 as u32);
-        
-//     }
-// }
-// pub struct 
-pub enum Fov{
-    Rectangular(u32, u32), // width/height
+#[derive(Debug, PartialEq)]
+pub enum TofActiveRange {
+    LONG,
+    SHORT,
+}
+// pub struct
+pub enum Fov {
+    Rectangular(u32, u32),           // width/height
     MacroRectangular(u32, u32, u32), // top, bottom, width
 }
 pub enum SPAD {
-    Map3x3Normal = 1, // 33x32
+    Map3x3Normal = 1,     // 33x32
     Map3x3MacroUpper = 2, // 30 up, 17 down, 33
     Map3x3MacroLower = 3,
     Map3x3Wide = 6,
@@ -29,9 +23,9 @@ pub enum SPAD {
     Map4x4Narrow = 13,
     Map3x6 = 10,
 }
-impl SPAD{
-    pub fn fov(&self)->Fov{
-        match &self{
+impl SPAD {
+    pub fn fov(&self) -> Fov {
+        match &self {
             SPAD::Map3x3Normal => Fov::Rectangular(33, 32),
             SPAD::Map3x3MacroUpper => Fov::MacroRectangular(30, 17, 33),
             SPAD::Map3x3MacroLower => Fov::MacroRectangular(17, 30, 33),
@@ -45,20 +39,37 @@ impl SPAD{
             SPAD::Map3x6 => Fov::Rectangular(33, 60),
         }
     }
-    pub fn divisions(&self) -> (u8,u8){
-        match &self{
-            SPAD::Map3x3Normal => (3,3),
-            SPAD::Map3x3MacroUpper => (3,3),
-            SPAD::Map3x3MacroLower => (3,3),
-            SPAD::Map3x3Wide => (3,3),
-            SPAD::Map3x3Checkerboard => (3,3),
-            SPAD::Map3x3InvCheckerboard => (3,3),
-            SPAD::Map4x4Normal => (4,4),
-            SPAD::Map4x4MacroUpper => (4,4),
-            SPAD::Map4x4MacroLower => (4,4),
-            SPAD::Map4x4Narrow => (4,4),
-            SPAD::Map3x6 => (3,6),
+    pub fn divisions(&self) -> (u8, u8) {
+        match &self {
+            SPAD::Map3x3Normal => (3, 3),
+            SPAD::Map3x3MacroUpper => (3, 3),
+            SPAD::Map3x3MacroLower => (3, 3),
+            SPAD::Map3x3Wide => (3, 3),
+            SPAD::Map3x3Checkerboard => (3, 3),
+            SPAD::Map3x3InvCheckerboard => (3, 3),
+            SPAD::Map4x4Normal => (4, 4),
+            SPAD::Map4x4MacroUpper => (4, 4),
+            SPAD::Map4x4MacroLower => (4, 4),
+            SPAD::Map4x4Narrow => (4, 4),
+            SPAD::Map3x6 => (3, 6),
         }
+    }
+    pub fn as_view(&self) -> View{
+        let center : (i32, i32);
+        let width : u32;
+        let height : u32;
+        match self.fov(){
+            Fov::Rectangular(w, h) => {center = (0,0); height = h; width = w;},
+            Fov::MacroRectangular(t, b, w) => {center = (0, ((t as i32 - b as i32)/2));height=t+b; width = w;},
+        };
+        return View{
+            center,
+            viewport: (width, height),
+            divisions: self.divisions(),
+        }
+    }
+    pub fn index_as_xy(&self, index: u8) -> Option<(u8,u8)>{
+        Some((index%self.divisions().0, index/self.divisions().0))
     }
 }
 

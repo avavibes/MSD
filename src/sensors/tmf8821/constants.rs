@@ -190,7 +190,7 @@ pub const TMF882X_ACTIVE_RANGE_SHORT: u8 = 0x6E;
 pub const TMF882X_ACTIVE_RANGE_LONG: u8 = 0x6F;
 
 pub const TMF882X_CALIBRATION_COMMON_CID: u8 = 0x19;
-pub const TMF882X_CALIBRATION_PAGE_SIZE: u16 = 0x00BC;
+pub const TMF882X_CALIBRATION_PAGE_SIZE: usize = 0x00BC;
 
 /* http://srecord.sourceforge.net/ */
 pub const TOF_BIN_IMAGE: [u8; 2476] = [
