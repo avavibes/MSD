@@ -6,9 +6,9 @@ use embedded_hal_async::{self as hal, delay::DelayNs};
 
 use hal::i2c::SevenBitAddress;
 
-use crate::tmf8821::constants::*;
+use crate::sensors::tmf8821::constants::*;
 // use crate::tmf8821::device::Err3::{NoConn, NoInit};
-use crate::tmf8821::{config::TmfConfiguration, constants::TOF_BIN_IMAGE};
+use crate::sensors::tmf8821::{config::TmfConfiguration, constants::TOF_BIN_IMAGE};
 pub enum TofActiveRange {
     LONG,
     SHORT,

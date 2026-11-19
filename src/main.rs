@@ -16,8 +16,8 @@ use embassy_rp::{bind_interrupts, usb};
 // use embassy_rp::{bind_interrupts, dma, mode};
 use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 use embassy_sync::mutex::Mutex;
-use msdi2c_scan::tmf8821::config::SPAD;
-use msdi2c_scan::tmf8821::device::TMF8821;
+use msdi2c_scan::sensors::tmf8821::config::SPAD;
+use msdi2c_scan::sensors::tmf8821::device::TMF8821;
 // use panic_probe as _;
 use static_cell::StaticCell;
 
