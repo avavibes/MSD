@@ -9,16 +9,14 @@ use core::panic::PanicInfo;
 // use defmt_rtt as _;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
-use embassy_rp::gpio::{Level, Output};
 use embassy_rp::i2c::{self, Async, I2c, InterruptHandler};
 use embassy_rp::peripherals::{I2C0, USB};
 use embassy_rp::{bind_interrupts, usb};
 // use embassy_rp::{bind_interrupts, dma, mode};
 use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 use embassy_sync::mutex::Mutex;
-use embassy_time::Timer;
 use msdi2c_scan::tmf8821::config::SPAD;
-use msdi2c_scan::tmf8821::device::{self, TMF8821};
+use msdi2c_scan::tmf8821::device::TMF8821;
 // use panic_probe as _;
 use static_cell::StaticCell;
 

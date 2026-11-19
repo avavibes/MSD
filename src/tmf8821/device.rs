@@ -1,10 +1,10 @@
-use core::{any::Any, cmp::min};
+use core::cmp::min;
 
 use derive_more::Display;
-use embassy_time::{Delay, Instant};
+use embassy_time::Instant;
 use embedded_hal_async::{self as hal, delay::DelayNs};
 
-use hal::i2c::{Operation, SevenBitAddress};
+use hal::i2c::SevenBitAddress;
 
 use crate::tmf8821::constants::*;
 // use crate::tmf8821::device::Err3::{NoConn, NoInit};
@@ -33,7 +33,7 @@ where
     /// The computed CRC and the one sent by the device mismatch
     BadCrc,
     NoAck,
-    
+    ParseError,
 }
 
 impl<I2cE> From<I2cE> for Error<I2cE>
@@ -46,7 +46,7 @@ where
 }
 #[derive(Debug, Display)]
 // #[display("result_number: {:?}, temperature: {:?}, number_valid_results: {:?}, ambient_light: {:?}, photon_count: {:?}, reference_count: {:?}, sys_tick: {:?},\r\ndistances: {:?}, \r\nconfidences: {:?}", result_number, temperature, number_valid_results, ambient_light, photon_count, reference_count, sys_tick, distances, confidences)]
-#[display("{} {:?} {:?}", ambient_light, distances, confidences)]
+#[display("{} {:?} {:?}", temperature, distances, confidences)]
 pub struct Measurement {
     result_number: u8,
     temperature: u8,
@@ -155,19 +155,15 @@ where
             if en_reg & 0x0F == 0b0001 {
                 //CPU is currently in the process of initializing HW and SW
                 continue;
-            } else if en_reg & 0x0F == 0b0001 {
+            } else if en_reg & 0x0F == 0b0010 {
                 // device in standby mode
                 // log::trace!("Device in standby, waking up");
-                device
-                    .write_reg(_tmf882X_REG_ENABLE, en_reg | 0x01)
-                    .await?;
-
+                device.write_reg(_tmf882X_REG_ENABLE, en_reg | 0x01).await?;
             } else if en_reg & 0x0F == 0b0110 {
                 // log::trace!("Device in measurement, resetting");
-               device
+                device
                     .write_reg(_tmf882X_REG_CMD_STAT, _tmf882X_APP_CMD_STOP)
-                    .await?
-                    ;
+                    .await?;
             }
             device.delay.delay_ms(1).await;
         }
@@ -176,21 +172,14 @@ where
             panic!("Failed to init");
         }
         log::info!("Device started!!!!");
-        let app_id = device.read_reg(_tmf882X_REG_APPID).await.unwrap();
+        let app_id = device.read_reg(_tmf882X_REG_APPID).await?;
         if app_id == _tmf882X_MODE_APP {
             log::info!("Device already flashed");
             device.delay.delay_ms(6).await;
             let mut res: [u8; 3] = [0; 3];
 
-            let r2 = device.read_bytes(_tmf882X_REG_MINOR, &mut res).await;
+            device.read_bytes(_tmf882X_REG_MINOR, &mut res).await?;
             log::info!("{:?}", res);
-            match r2 {
-                Ok(s) => s,
-                Err(e) => {
-                    log::info!("AAAAAA");
-                    return Ok(device);
-                }
-            };
             let minor: u8 = res[0];
             let patch: u8 = res[1];
             let build: u8 = res[2];
@@ -198,15 +187,8 @@ where
             return Ok(device);
         }
         let mut res: [u8; 2] = [0; 2];
-        let r2 = device.read_bytes(_tmf882X_REG_APPID, &mut res).await;
+        device.read_bytes(_tmf882X_REG_APPID, &mut res).await?;
         log::info!("{:?}", res);
-        match r2 {
-            Ok(s) => s,
-            Err(e) => {
-                log::info!("BBBBB");
-                return Ok(device);
-            }
-        };
 
         log::info!("ROM VERSION: {}", res[1]);
         if res[1] != _tmf882X_ROM_V2 {
@@ -217,28 +199,14 @@ where
         log::info!("SOMEHOW WE GOOD");
         // if res[2]
         let res = [0x29];
-        let r2 = device
+        device
             .write_bl_command(_tmf882X_BL_DOWNLOAD_INIT, &res)
-            .await;
-        match r2 {
-            Ok(s) => s,
-            Err(e) => {
-                log::info!("BBBBB");
-                return Ok(device);
-            }
-        };
-        let a = device.check_bl_cmd_executed().await;
+            .await?;
+        device.check_bl_cmd_executed().await?;
 
-        // match res{}
-        if a.is_err() {
-            log::info!("BADDDDD");
-        }
-        if a.is_ok() {
-            log::info!("GOOD");
-        }
         // panic!();
         // return Ok(device);
-        let r2 = device
+        device
             .write_bl_command(
                 _tmf882X_BL_SET_ADDR,
                 &[
@@ -246,23 +214,9 @@ where
                     _tmf882X_BL_FW_ADDR as u8 & 0xFF,
                 ],
             )
-            .await;
-        match r2 {
-            Ok(s) => s,
-            Err(e) => {
-                log::info!("cmd failed for set fw addr");
-                return Ok(device);
-            }
-        };
-        let a = device.check_bl_cmd_executed().await;
+            .await?;
+        device.check_bl_cmd_executed().await?;
 
-        // match res{}
-        if a.is_err() {
-            log::info!("ack failed for set fw addr");
-        }
-        if a.is_ok() {
-            log::info!("ack succeeded for set fw addr");
-        }
         let mut size_downloaded = 0;
         log::info!("Downloading firmware");
         while size_downloaded < tof_bin_image.len() {
@@ -271,48 +225,27 @@ where
                 tof_bin_image.len() - size_downloaded,
             );
             let data = &tof_bin_image[size_downloaded..size_downloaded + chunk];
-            let r2 = device.write_bl_command(_tmf882X_BL_W_RAM, data).await;
-            match r2 {
-                Ok(s) => s,
-                Err(e) => {
-                    log::info!("Error in firmware flash");
-                    return Ok(device);
-                }
-            };
-            let r2 = device.check_bl_cmd_executed().await;
-            match r2 {
-                Ok(s) => s,
-                Err(e) => {
-                    log::info!("noack in firmware flash");
-                    return Ok(device);
-                }
-            };
+            device.write_bl_command(_tmf882X_BL_W_RAM, data).await?;
+            device.check_bl_cmd_executed().await?;
             size_downloaded += chunk;
             log::info!("{}/{}", size_downloaded, tof_bin_image.len());
         }
         log::info!("Finished writing fw");
-        device.write_reg(_tmf882X_REG_ENABLE, 0x21).await.unwrap(); // set bit 0 (general enable) and bit 5 (run from RAM)
+        device.write_reg(_tmf882X_REG_ENABLE, 0x21).await?; // set bit 0 (general enable) and bit 5 (run from RAM)
         device
             .write_bl_command(_tmf882X_BL_RAMREMAP_RESET, &[])
-            .await
-            .unwrap();
+            .await?;
 
         let now = Instant::now();
         while now.elapsed().as_millis() < 3 {
-            let app_id = device.read_reg(_tmf882X_REG_APPID).await.unwrap();
+            let app_id = device.read_reg(_tmf882X_REG_APPID).await?;
             if app_id == _tmf882X_MODE_APP {
                 device.delay.delay_ms(6).await;
                 let mut res: [u8; 3] = [0; 3];
 
-                let r2 = device.read_bytes(_tmf882X_REG_MINOR, &mut res).await;
+                device.read_bytes(_tmf882X_REG_MINOR, &mut res).await?;
                 log::info!("{:?}", res);
-                match r2 {
-                    Ok(s) => s,
-                    Err(e) => {
-                        log::info!("AAAAAA");
-                        return Ok(device);
-                    }
-                };
+
                 let minor: u8 = res[0];
                 let patch: u8 = res[1];
                 let build: u8 = res[2];
@@ -326,10 +259,7 @@ where
 
         // Ok(device)
     }
-    // pub async fn set_active_range(&mut self, range: ACTIVE_RANGE) -> Result<(), Error<I2C::Error>>{
-    //     match
-    //     Ok(())
-    // }
+
     pub async fn read_reg(&mut self, reg: u8) -> Result<u8, Error<I2C::Error>> {
         let mut result = [0u8];
         let res = self.i2c.write_read(self.address, &[reg], &mut result).await;
@@ -340,7 +270,6 @@ where
                 return Err(Error::I2c(e));
             }
         }
-        
     }
     pub async fn start_measurements(&mut self) -> Result<(), Error<I2C::Error>> {
         self.write_reg(_tmf882X_REG_INT_ENAB, 0x02).await?;
@@ -386,21 +315,20 @@ where
         let mut measurement_data: [u8; _] = [0; _tmf882X_MEASUREMENT_SIZE];
         // Ok(Measurement::from_data(self, data))
         self.write_reg(_tmf882X_REG_INT_STATUS, 0x02).await.unwrap();
-        let res = self
-            .read_bytes(_tmf882X_REG_CONFIG_RESULT, &mut measurement_data)
-            .await
-            .unwrap();
-        let res = self.read_reg(_tmf882X_REG_MEASURE_STATUS).await.unwrap();
+        self.read_bytes(_tmf882X_REG_CONFIG_RESULT, &mut measurement_data)
+            .await?;
+        let res = self.read_reg(_tmf882X_REG_MEASURE_STATUS).await?;
         if res != 0x00 {
             return Err(Error::NoAck);
         }
-        return Ok(Measurement::from_data(&measurement_data).unwrap());
+        let mes = Measurement::from_data(&measurement_data);
+        match mes {
+            Some(s) => Ok(s),
+            None => Err(Error::ParseError),
+        }
     }
     pub async fn write_reg(&mut self, reg: u8, data: u8) -> Result<(), Error<I2C::Error>> {
-        self.i2c
-            .write(self.address, &[reg, data])
-            .await?
-            ;
+        self.i2c.write(self.address, &[reg, data]).await?;
         Ok(())
         // match res{
         //     Ok(s) => Ok(()),
