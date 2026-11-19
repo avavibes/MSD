@@ -1,0 +1,48 @@
+[package]
+name = "msdi2c-scan"
+version = "0.2.0"
+edition = "2024"
+
+[profile.release]
+lto = "fat"
+strip = true
+codegen-units = 1
+opt-level = "s"
+
+[dependencies]
+# Cortex-M 
+cortex-m = { version ="0.7.7", registry = "kellnr-cratesio" }
+cortex-m-rt = { version ="0.7.5", registry = "kellnr-cratesio" }
+
+# Panic Handler
+panic-probe = { version = "1.0.0", registry = "kellnr-cratesio" }
+
+# Embassy
+embassy-executor = { version = "0.10", features = [
+  "platform-cortex-m",
+  "executor-thread",
+  "executor-thread",
+
+    "embassy-time-driver",
+    "executor-interrupt",
+], registry = "kellnr-cratesio" }
+embassy-time = { version = "0.5.0", registry = "kellnr-cratesio" }
+embassy-rp = { version = "0.10.0", features = [
+  "time-driver",
+  "critical-section-impl",
+  "rp235xa",
+  "binary-info",
+    "unstable-pac",
+], registry = "kellnr-cratesio" }
+
+embassy-usb-logger = {version = "0.6.0", registry = "kellnr-cratesio"}
+log = {version = "0.4", registry = "kellnr-cratesio"}
+embedded-hal = { version = "1.0.0", registry = "kellnr-cratesio" }
+embedded-hal-async = { version = "1.0.0", registry = "kellnr-cratesio" }
+embassy-embedded-hal = { version = "0.6.0", registry = "kellnr-cratesio" }
+embedded-hal-bus = { version = "0.3.0", registry = "kellnr-cratesio", features = ["async"] }
+micromath = { version = "2.1.0", registry = "kellnr-cratesio" }
+weather-utils = { version = "0.5.0", registry = "kellnr-cratesio", features = ["no-std"] }
+embassy-sync = { version = "0.8.0", registry = "kellnr-cratesio" }
+static_cell = { version = "2.1.1", registry = "kellnr-cratesio" }
+derive_more = { version = "2", registry = "kellnr-cratesio", default-features = false, features=["display"]}
