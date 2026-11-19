@@ -1,15 +1,15 @@
 pub enum SPAD {
-    MAP_3x3_normal = 1,
-    MAP_3x3_macro_upper = 2,
-    MAP_3x3_macro_lower = 3,
-    MAP_3x3_wide = 6,
-    MAP_3x3_checkerboard = 11,
-    MAP_3x3_inv_checkerboard = 12,
-    MAP_4x4_normal = 7,
-    MAP_4x4_macro_upper = 4,
-    MAP_4x4_macro_lower = 5,
-    MAP_4x4_narrow = 13,
-    MAP_3x6 = 10,
+    Map3x3Normal = 1,
+    Map3x3MacroUpper = 2,
+    Map3x3MacroLower = 3,
+    Map3x3Wide = 6,
+    Map3x3Checkerboard = 11,
+    Map3x3InvCheckerboard = 12,
+    Map4x4Normal = 7,
+    Map4x4MacroUpper = 4,
+    Map4x4MacroLower = 5,
+    Map4x4Narrow = 13,
+    Map3x6 = 10,
 }
 
 const _TMF8821_DEFAULT_CONFIGS: [u8; 24] = [
@@ -38,12 +38,12 @@ const _TMF8821_DEFAULT_CONFIGS: [u8; 24] = [
     0,  // OSC_TRIM_VALUE_MSB (at address 0x3D)
     0,  // I2C_ADDR_CHANGE (at address 0x3E)
 ];
-pub struct TMF882X_Configuration {
+pub struct TmfConfiguration {
     pub config: [u8; 24],
 }
-impl TMF882X_Configuration {
+impl TmfConfiguration {
     pub fn new_default() -> Self {
-        TMF882X_Configuration {
+        TmfConfiguration {
             config: _TMF8821_DEFAULT_CONFIGS,
         }
     }

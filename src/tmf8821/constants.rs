@@ -1,97 +1,97 @@
-pub const _tmf882X_REG_APPID: u8 = 0x00; // appid
-pub const _tmf882X_REG_MINOR: u8 = 0x01; // minor
-pub const _tmf882X_REG_ENABLE: u8 = 0xE0; // cpu_ready, powerup_select, pon
-pub const _tmf882X_REG_INT_STATUS: u8 = 0xE1; // int7, int6, int4, int2, writing 1 clears the flag
-pub const _tmf882X_REG_INT_ENAB: u8 = 0xE2; // int7_enable, int6_enable, int4_enable, int2_enable
-pub const _tmf882X_REG_ID: u8 = 0xE3; // Chip ID, reads 08h – do not rely on register bits 6 and 7 of this register.
+pub const TMF882X_REG_APPID: u8 = 0x00; // appid
+pub const TMF882X_REG_MINOR: u8 = 0x01; // minor
+pub const TMF882X_REG_ENABLE: u8 = 0xE0; // cpu_ready, powerup_select, pon
+pub const TMF882X_REG_INT_STATUS: u8 = 0xE1; // int7, int6, int4, int2, writing 1 clears the flag
+pub const TMF882X_REG_INT_ENAB: u8 = 0xE2; // int7_enable, int6_enable, int4_enable, int2_enable
+pub const TMF882X_REG_ID: u8 = 0xE3; // Chip ID, reads 08h – do not rely on register bits 6 and 7 of this register.
 
 // If appid=0x03, any cid_rid, the following describe Main Application Register
-pub const _tmf882X_REG_PATCH: u8 = 0x02; // patch
-pub const _tmf882X_REG_BUILD_TYPE: u8 = 0x03; // build
-pub const _tmf882X_REG_APPLICATION_STATUS: u8 = 0x04; // app_status
-pub const _tmf882X_REG_MEASURE_STATUS: u8 = 0x05; // measure_status
-pub const _tmf882X_REG_ALGORITHM_STATUS: u8 = 0x06; // alg_status
-pub const _tmf882X_REG_CALIBRATION_STATUS: u8 = 0x07; // fc_status
-pub const _tmf882X_REG_CMD_STAT: u8 = 0x08; // cmd_stat
-pub const _tmf882X_REG_PREV_CMD: u8 = 0x09; // prev_cmd
-pub const _tmf8828_REG_MODE: u8 = 0x10; // (TMF8828 ONLY; mode
-pub const _tmf882X_REG_LIVE_BEAT: u8 = 0x0A; // live_beat
-pub const _tmf882X_REG_ACTIVE_RANGE: u8 = 0x19; // active_range (long / short;
-pub const _tmf882X_REG_SERIAL_NUMBER_0: u8 = 0x1C; // serial_number[7:0]
-pub const _tmf882X_REG_SERIAL_NUMBER_1: u8 = 0x1D; // serial_number[15:8]
-pub const _tmf882X_REG_SERIAL_NUMBER_2: u8 = 0x1E; // serial_number[23:16]
-pub const _tmf882X_REG_SERIAL_NUMBER_3: u8 = 0x1F; // serial_number[31:24]
-pub const _tmf882X_REG_CONFIG_RESULT: u8 = 0x20; // cid_rid
-pub const _tmf882X_REG_TID: u8 = 0x21; // tid
-pub const _tmf882X_REG_SIZE_LSB: u8 = 0x22; // size[7:0]
-pub const _tmf882X_REG_SIZE_MSB: u8 = 0x23; // size[15:8]
+pub const TMF882X_REG_PATCH: u8 = 0x02; // patch
+pub const TMF882X_REG_BUILD_TYPE: u8 = 0x03; // build
+pub const TMF882X_REG_APPLICATION_STATUS: u8 = 0x04; // app_status
+pub const TMF882X_REG_MEASURE_STATUS: u8 = 0x05; // measure_status
+pub const TMF882X_REG_ALGORITHM_STATUS: u8 = 0x06; // alg_status
+pub const TMF882X_REG_CALIBRATION_STATUS: u8 = 0x07; // fc_status
+pub const TMF882X_REG_CMD_STAT: u8 = 0x08; // cmd_stat
+pub const TMF882X_REG_PREV_CMD: u8 = 0x09; // prev_cmd
+pub const TMF8828_REG_MODE: u8 = 0x10; // (TMF8828 ONLY; mode
+pub const TMF882X_REG_LIVE_BEAT: u8 = 0x0A; // live_beat
+pub const TMF882X_REG_ACTIVE_RANGE: u8 = 0x19; // active_range (long / short;
+pub const TMF882X_REG_SERIAL_NUMBER_0: u8 = 0x1C; // serial_number[7:0]
+pub const TMF882X_REG_SERIAL_NUMBER_1: u8 = 0x1D; // serial_number[15:8]
+pub const TMF882X_REG_SERIAL_NUMBER_2: u8 = 0x1E; // serial_number[23:16]
+pub const TMF882X_REG_SERIAL_NUMBER_3: u8 = 0x1F; // serial_number[31:24]
+pub const TMF882X_REG_CONFIG_RESULT: u8 = 0x20; // cid_rid
+pub const TMF882X_REG_TID: u8 = 0x21; // tid
+pub const TMF882X_REG_SIZE_LSB: u8 = 0x22; // size[7:0]
+pub const TMF882X_REG_SIZE_MSB: u8 = 0x23; // size[15:8]
 
 // If appid=0x03, cid_rid=0x10, the following describe Measurement Results
-pub const _tmf882X_REG_RESULT_NUMBER: u8 = 0x24; // number
-pub const _tmf882X_REG_TEMPERATURE: u8 = 0x25; // temperature
-pub const _tmf882X_REG_NUMBER_VALID_RESULTS: u8 = 0x26; // valid_results
-pub const _tmf882X_REG_AMBIENT_LIGHT_0: u8 = 0x28; // ambient[7:0]
-pub const _tmf882X_REG_AMBIENT_LIGHT_1: u8 = 0x29; // ambient[15:8]
-pub const _tmf882X_REG_AMBIENT_LIGHT_2: u8 = 0x2A; // ambient[23:16]
-pub const _tmf882X_REG_AMBIENT_LIGHT_3: u8 = 0x2B; // ambient[31:24]
-pub const _tmf882X_REG_PHOTON_COUNT_0: u8 = 0x2C; // photon_count[7:0]
-pub const _tmf882X_REG_PHOTON_COUNT_1: u8 = 0x2D; // photon_count[15:8]
-pub const _tmf882X_REG_PHOTON_COUNT_2: u8 = 0x2E; // photon_count[23:16]
-pub const _tmf882X_REG_PHOTON_COUNT_3: u8 = 0x2F; // photon_count[31:24]
-pub const _tmf882X_REG_REFERENCE_COUNT_0: u8 = 0x30; // reference_count[7:0]
-pub const _tmf882X_REG_REFERENCE_COUNT_1: u8 = 0x31; // reference_count[15:8]
-pub const _tmf882X_REG_REFERENCE_COUNT_2: u8 = 0x32; // reference_count[23:16]
-pub const _tmf882X_REG_REFERENCE_COUNT_3: u8 = 0x33; // reference_count[31:24]
-pub const _tmf882X_REG_SYS_TICK_0: u8 = 0x34; // sys_tick[7:0]
-pub const _tmf882X_REG_SYS_TICK_1: u8 = 0x35; // sys_tick[15:8]
-pub const _tmf882X_REG_SYS_TICK_2: u8 = 0x36; // sys_tick[23:16]
-pub const _tmf882X_REG_SYS_TICK_3: u8 = 0x37; // sys_tick[31:24]
-// pub const _tmf882X_REG_RES_CONFIDENCE_i: [u8] = [(0x38..0xA1 + 1).step_by(3)];  // confidence[i]
-// pub const _tmf882X_REG_RES_DISTANCE_i_LSB: [u8] = [(0x39..0xA2 + 1).step_by(3)];  // distance[i][7:0]
-// pub const _tmf882X_REG_RES_DISTANCE_i_MSB: [u8] = [((0x3A..0xA3 + 1).step_by(3))];  // distance[i][15:8]
-pub const _tmf882X_MEASUREMENT_SIZE: usize = 132;
+pub const TMF882X_REG_RESULT_NUMBER: u8 = 0x24; // number
+pub const TMF882X_REG_TEMPERATURE: u8 = 0x25; // temperature
+pub const TMF882X_REG_NUMBER_VALID_RESULTS: u8 = 0x26; // valid_results
+pub const TMF882X_REG_AMBIENT_LIGHT_0: u8 = 0x28; // ambient[7:0]
+pub const TMF882X_REG_AMBIENT_LIGHT_1: u8 = 0x29; // ambient[15:8]
+pub const TMF882X_REG_AMBIENT_LIGHT_2: u8 = 0x2A; // ambient[23:16]
+pub const TMF882X_REG_AMBIENT_LIGHT_3: u8 = 0x2B; // ambient[31:24]
+pub const TMF882X_REG_PHOTON_COUNT_0: u8 = 0x2C; // photon_count[7:0]
+pub const TMF882X_REG_PHOTON_COUNT_1: u8 = 0x2D; // photon_count[15:8]
+pub const TMF882X_REG_PHOTON_COUNT_2: u8 = 0x2E; // photon_count[23:16]
+pub const TMF882X_REG_PHOTON_COUNT_3: u8 = 0x2F; // photon_count[31:24]
+pub const TMF882X_REG_REFERENCE_COUNT_0: u8 = 0x30; // reference_count[7:0]
+pub const TMF882X_REG_REFERENCE_COUNT_1: u8 = 0x31; // reference_count[15:8]
+pub const TMF882X_REG_REFERENCE_COUNT_2: u8 = 0x32; // reference_count[23:16]
+pub const TMF882X_REG_REFERENCE_COUNT_3: u8 = 0x33; // reference_count[31:24]
+pub const TMF882X_REG_SYS_TICK_0: u8 = 0x34; // sys_tick[7:0]
+pub const TMF882X_REG_SYS_TICK_1: u8 = 0x35; // sys_tick[15:8]
+pub const TMF882X_REG_SYS_TICK_2: u8 = 0x36; // sys_tick[23:16]
+pub const TMF882X_REG_SYS_TICK_3: u8 = 0x37; // sys_tick[31:24]
+// pub const TMF882X_REG_RES_CONFIDENCE_i: [u8] = [(0x38..0xA1 + 1).step_by(3)];  // confidence[i]
+// pub const TMF882X_REG_RES_DISTANCE_i_LSB: [u8] = [(0x39..0xA2 + 1).step_by(3)];  // distance[i][7:0]
+// pub const TMF882X_REG_RES_DISTANCE_i_MSB: [u8] = [((0x3A..0xA3 + 1).step_by(3))];  // distance[i][15:8]
+pub const TMF882X_MEASUREMENT_SIZE: usize = 132;
 
 // If appid=0x03, cid_rid=0x16, the following describe Configuration Page
-pub const _tmf882X_REG_PERIOD_MS_LSB: u8 = 0x24; // period[7:0]
-pub const _tmf882X_REG_PERIOD_MS_MSB: u8 = 0x25; // period[15:8]
-pub const _tmf882X_REG_KILO_ITERATIONS_LSB: u8 = 0x26; // iterations[7:0]
-pub const _tmf882X_REG_KILO_ITERATIONS_MSB: u8 = 0x27; // iterations[15:8]
-pub const _tmf882X_REG_INT_THRESHOLD_LOW_LSB: u8 = 0x28; // int_threshold_low[7:0]
-pub const _tmf882X_REG_INT_THRESHOLD_LOW_MSB: u8 = 0x29; // int_threshold_low[15:8]
-pub const _tmf882X_REG_INT_THRESHOLD_HIGH_LSB: u8 = 0x2A; // int_threshold_high[7:0]
-pub const _tmf882X_REG_INT_THRESHOLD_HIGH_MSB: u8 = 0x2B; // int_threshold_high[15:8]
-pub const _tmf882X_REG_INT_ZONE_MASK_0: u8 = 0x2C; // int_zone_mask[7:0]
-pub const _tmf882X_REG_INT_ZONE_MASK_1: u8 = 0x2D; // int_zone_mask[15:8]
-pub const _tmf882X_REG_INT_ZONE_MASK_2: u8 = 0x2E; // int_zone_mask[17:16]
-pub const _tmf882X_REG_INT_PERSISTENCE: u8 = 0x2F; // int_persistence
-pub const _tmf882X_REG_CONFIDENCE_THRESHOLD: u8 = 0x30; // confidence_threshold
-pub const _tmf882X_REG_GPIO_0: u8 = 0x31; // driver_strength0 pre_delay0 gpio0
-pub const _tmf882X_REG_GPIO_1: u8 = 0x32; // driver_strength1 pre_delay1 gpio1
-pub const _tmf882X_REG_POWER_CFG: u8 = 0x33; // goto_standby_timed low_power_osc_on keep_pll_running allow_osc_retrim pulse_interrupt
-pub const _tmf882X_REG_SPAD_MAP_ID: u8 = 0x34; // spad_map_id
-pub const _tmf882X_REG_ALG_SETTING_0: u8 = 0x35; // logarithmic_confidence distance_mode distances
-// pub const _tmf882X_REG_Reserved: u8 = 0x38;  // – keep at 0
-pub const _tmf882X_REG_HIST_DUMP: u8 = 0x39; // histogram
-pub const _tmf882X_REG_SPREAD_SPECTRUM: u8 = 0x3A; // spread_spectrum_factor[2:0]
-pub const _tmf882X_REG_I2C_SLAVE_ADDRESS: u8 = 0x3B; // 7bit_slave_address 0
-pub const _tmf882X_REG_OSC_TRIM_VALUE_LSB: u8 = 0x3C; // osc_trim_value[7:0]
-pub const _tmf882X_REG_OSC_TRIM_VALUE_MSB: u8 = 0x3D; // osc_trim_value[8]
-pub const _tmf882X_REG_I2C_ADDR_CHANGE: u8 = 0x3E; // gpio_change_mask gpio_change_value
+pub const TMF882X_REG_PERIOD_MS_LSB: u8 = 0x24; // period[7:0]
+pub const TMF882X_REG_PERIOD_MS_MSB: u8 = 0x25; // period[15:8]
+pub const TMF882X_REG_KILO_ITERATIONS_LSB: u8 = 0x26; // iterations[7:0]
+pub const TMF882X_REG_KILO_ITERATIONS_MSB: u8 = 0x27; // iterations[15:8]
+pub const TMF882X_REG_INT_THRESHOLD_LOW_LSB: u8 = 0x28; // int_threshold_low[7:0]
+pub const TMF882X_REG_INT_THRESHOLD_LOW_MSB: u8 = 0x29; // int_threshold_low[15:8]
+pub const TMF882X_REG_INT_THRESHOLD_HIGH_LSB: u8 = 0x2A; // int_threshold_high[7:0]
+pub const TMF882X_REG_INT_THRESHOLD_HIGH_MSB: u8 = 0x2B; // int_threshold_high[15:8]
+pub const TMF882X_REG_INT_ZONE_MASK_0: u8 = 0x2C; // int_zone_mask[7:0]
+pub const TMF882X_REG_INT_ZONE_MASK_1: u8 = 0x2D; // int_zone_mask[15:8]
+pub const TMF882X_REG_INT_ZONE_MASK_2: u8 = 0x2E; // int_zone_mask[17:16]
+pub const TMF882X_REG_INT_PERSISTENCE: u8 = 0x2F; // int_persistence
+pub const TMF882X_REG_CONFIDENCE_THRESHOLD: u8 = 0x30; // confidence_threshold
+pub const TMF882X_REG_GPIO_0: u8 = 0x31; // driver_strength0 pre_delay0 gpio0
+pub const TMF882X_REG_GPIO_1: u8 = 0x32; // driver_strength1 pre_delay1 gpio1
+pub const TMF882X_REG_POWER_CFG: u8 = 0x33; // goto_standby_timed low_power_osc_on keep_pll_running allow_osc_retrim pulse_interrupt
+pub const TMF882X_REG_SPAD_MAP_ID: u8 = 0x34; // spad_map_id
+pub const TMF882X_REG_ALG_SETTING_0: u8 = 0x35; // logarithmic_confidence distance_mode distances
+// pub const TMF882X_REG_Reserved: u8 = 0x38;  // – keep at 0
+pub const TMF882X_REG_HIST_DUMP: u8 = 0x39; // histogram
+pub const TMF882X_REG_SPREAD_SPECTRUM: u8 = 0x3A; // spread_spectrum_factor[2:0]
+pub const TMF882X_REG_I2C_SLAVE_ADDRESS: u8 = 0x3B; // 7bit_slave_address 0
+pub const TMF882X_REG_OSC_TRIM_VALUE_LSB: u8 = 0x3C; // osc_trim_value[7:0]
+pub const TMF882X_REG_OSC_TRIM_VALUE_MSB: u8 = 0x3D; // osc_trim_value[8]
+pub const TMF882X_REG_I2C_ADDR_CHANGE: u8 = 0x3E; // gpio_change_mask gpio_change_value
 
 // If appid=0x03, cid_rid=0x17/0x18, the following describe User defined SPAD Configuration
-pub const _tmf882X_REG_SPAD_ENABLE_FIRST: u8 = 0x24; // spad_enable_first
-pub const _tmf882X_REG_SPAD_ENABLE_LAST: u8 = 0x41; // spad_enable_last
-pub const _tmf882X_REG_SPAD_TDC_FIRST: u8 = 0x42; // spad_tdc_first
-pub const _tmf882X_REG_SPAD_TDC_LAST: u8 = 0x8C; // spad_tdc_last
-pub const _tmf882X_REG_SPAD_X_OFFSET_2: u8 = 0x8D; // x_offset_2
-pub const _tmf882X_REG_SPAD_Y_OFFSET_2: u8 = 0x8E; // y_offset_2
-pub const _tmf882X_REG_SPAD_X_SIZE: u8 = 0x8F; // x_size
-pub const _tmf882X_REG_SPAD_Y_SIZE: u8 = 0x90; // y_size
+pub const TMF882X_REG_SPAD_ENABLE_FIRST: u8 = 0x24; // spad_enable_first
+pub const TMF882X_REG_SPAD_ENABLE_LAST: u8 = 0x41; // spad_enable_last
+pub const TMF882X_REG_SPAD_TDC_FIRST: u8 = 0x42; // spad_tdc_first
+pub const TMF882X_REG_SPAD_TDC_LAST: u8 = 0x8C; // spad_tdc_last
+pub const TMF882X_REG_SPAD_X_OFFSET_2: u8 = 0x8D; // x_offset_2
+pub const TMF882X_REG_SPAD_Y_OFFSET_2: u8 = 0x8E; // y_offset_2
+pub const TMF882X_REG_SPAD_X_SIZE: u8 = 0x8F; // x_size
+pub const TMF882X_REG_SPAD_Y_SIZE: u8 = 0x90; // y_size
 
 // If appid=0x03, cid_rid=0x19, the following describe Factory Calibration
-pub const _tmf882X_REG_FACTORY_CALIBRATION_FIRST: u8 = 0x24; // factory_calibration_first – see section 7.3
-// pub const _tmf882X_REG_CROSSTALK_ZONE_i = [list(range(0x60 + 4 * i, 0x060 + 4 * (i + 1))) for i in range(36)]
-pub const _tmf882X_REG_CROSSTALK_ZONE_i: [[u8; 4]; 36] = [
+pub const TMF882X_REG_FACTORY_CALIBRATION_FIRST: u8 = 0x24; // factory_calibration_first – see section 7.3
+// pub const TMF882X_REG_CROSSTALK_ZONE_i = [list(range(0x60 + 4 * i, 0x060 + 4 * (i + 1))) for i in range(36)]
+pub const TMF882X_REG_CROSSTALK_ZONE_I: [[u8; 4]; 36] = [
     [96, 97, 98, 99],
     [100, 101, 102, 103],
     [104, 105, 106, 107],
@@ -130,70 +130,70 @@ pub const _tmf882X_REG_CROSSTALK_ZONE_i: [[u8; 4]; 36] = [
     [236, 237, 238, 239],
 ]; // crosstalk_
 // amplitude_zone[i], 32-bit value, LSB first (little-endian;
-// pub const _tmf882X_REG_CROSSTALK_ZONE_i_TMUX = [list(range(0xB8 + 4 * i, 0xB8 + 4 * (i + 1))) for i in range(36)]  // cross-
-// pub const _tmf882X_REG_CROSSTALK_ZONE_i_TMUX: [[u8;4]] = [[184, 185, 186, 187], [188, 189, 190, 191], [192, 193, 194, 195], [196, 197, 198, 199], [200, 201, 202, 203], [204, 205, 206, 207], [208, 209, 210, 211], [212, 213, 214, 215], [216, 217, 218, 219], [220, 221, 222, 223], [224, 225, 226, 227], [228, 229, 230, 231], [232, 233, 234, 235], [236, 237, 238, 239], [240, 241, 242, 243], [244, 245, 246, 247], [248, 249, 250, 251], [252, 253, 254, 255], [256, 257, 258, 259], [260, 261, 262, 263], [264, 265, 266, 267], [268, 269, 270, 271], [272, 273, 274, 275], [276, 277, 278, 279], [280, 281, 282, 283], [284, 285, 286, 287], [288, 289, 290, 291], [292, 293, 294, 295], [296, 297, 298, 299], [300, 301, 302, 303], [304, 305, 306, 307], [308, 309, 310, 311], [312, 313, 314, 315], [316, 317, 318, 319], [320, 321, 322, 323], [324, 325, 326, 327]];
+// pub const TMF882X_REG_CROSSTALK_ZONE_i_TMUX = [list(range(0xB8 + 4 * i, 0xB8 + 4 * (i + 1))) for i in range(36)]  // cross-
+// pub const TMF882X_REG_CROSSTALK_ZONE_i_TMUX: [[u8;4]] = [[184, 185, 186, 187], [188, 189, 190, 191], [192, 193, 194, 195], [196, 197, 198, 199], [200, 201, 202, 203], [204, 205, 206, 207], [208, 209, 210, 211], [212, 213, 214, 215], [216, 217, 218, 219], [220, 221, 222, 223], [224, 225, 226, 227], [228, 229, 230, 231], [232, 233, 234, 235], [236, 237, 238, 239], [240, 241, 242, 243], [244, 245, 246, 247], [248, 249, 250, 251], [252, 253, 254, 255], [256, 257, 258, 259], [260, 261, 262, 263], [264, 265, 266, 267], [268, 269, 270, 271], [272, 273, 274, 275], [276, 277, 278, 279], [280, 281, 282, 283], [284, 285, 286, 287], [288, 289, 290, 291], [292, 293, 294, 295], [296, 297, 298, 299], [300, 301, 302, 303], [304, 305, 306, 307], [308, 309, 310, 311], [312, 313, 314, 315], [316, 317, 318, 319], [320, 321, 322, 323], [324, 325, 326, 327]];
 // talk_amplitude_zone[i] time muxed, 32-bit value, LSB first (little-endian; – for 4x4 mode this represents the zone 10
 // as described in section 7.4.3
-pub const _tmf882X_REG_CALIBRATION_STATUS_FC: u8 = 0xDC; // fc_status_during_cal - calibration status during factory
+pub const TMF882X_REG_CALIBRATION_STATUS_FC: u8 = 0xDC; // fc_status_during_cal - calibration status during factory
 // calibration – copy of register 0x07 – 0x00 success, all other values are reporting an error during calibration
-pub const _tmf882X_REG_FACTORY_CALIBRATION_LAST: u8 = 0xDF; // factory_calibration_last
+pub const TMF882X_REG_FACTORY_CALIBRATION_LAST: u8 = 0xDF; // factory_calibration_last
 
 // If appid=0x03, cid_rid=0x81, the following describe Raw data Histogram
-pub const _tmf882X_REG_SUBPACKET_NUMBER: u8 = 0x24; // subpacket_number
-pub const _tmf882X_REG_SUBPACKET_PAYLOAD: u8 = 0x25; // subpacket_payload
-pub const _tmf882X_REG_SUBPACKET_CONFIG: u8 = 0x26; // subpacket_config
-// pub const _tmf882X_REG_SUBPACKET_DATA_i: [u8] = [0x27..0xA6 + 1];  // subpacket_data[i]
+pub const TMF882X_REG_SUBPACKET_NUMBER: u8 = 0x24; // subpacket_number
+pub const TMF882X_REG_SUBPACKET_PAYLOAD: u8 = 0x25; // subpacket_payload
+pub const TMF882X_REG_SUBPACKET_CONFIG: u8 = 0x26; // subpacket_config
+// pub const TMF882X_REG_SUBPACKET_DATA_i: [u8] = [0x27..0xA6 + 1];  // subpacket_data[i]
 
 // If appid=0x80, the following describe Bootloader Registers
-pub const _tmf882X_REG_BL_ROM_VERSION: u8 = 0x01; // bootloader revision (aka ROM version; -> 0x26 = v1, 0x29 = v2
-pub const _tmf882X_REG_BL_CMD_STAT: u8 = 0x08; // bl_cmd_stat
-pub const _tmf882X_REG_BL_SIZE: u8 = 0x09; // bl_size
-pub const _tmf882X_REG_BL_DATA_START: u8 = 0x0A; // bl_data0 … bl_data127 - size depends on bl_cmd_stat – can be from 0 to 128. The checksum BL_CSUM is right after data
+pub const TMF882X_REG_BL_ROM_VERSION: u8 = 0x01; // bootloader revision (aka ROM version; -> 0x26 = v1, 0x29 = v2
+pub const TMF882X_REG_BL_CMD_STAT: u8 = 0x08; // bl_cmd_stat
+pub const TMF882X_REG_BL_SIZE: u8 = 0x09; // bl_size
+pub const TMF882X_REG_BL_DATA_START: u8 = 0x0A; // bl_data0 … bl_data127 - size depends on bl_cmd_stat – can be from 0 to 128. The checksum BL_CSUM is right after data
 
 // Internal constants:
-pub const _tmf882X_DEFAULT_I2C_ADDR: u8 = 0x41;
+pub const TMF882X_DEFAULT_I2C_ADDR: u8 = 0x41;
 
-pub const _tmf882X_MODE_BOOTLOADER: u8 = 0x80;
-pub const _tmf882X_MODE_APP: u8 = 0x03;
-// pub const _tmf882X_app_id_name = {pub const _tmf882X_MODE_BOOTLOADER: 'BTL', pub const _tmf882X_MODE_APP: 'APP'}
+pub const TMF882X_MODE_BOOTLOADER: u8 = 0x80;
+pub const TMF882X_MODE_APP: u8 = 0x03;
+// pub const TMF882X_app_id_name = {pub const TMF882X_MODE_BOOTLOADER: 'BTL', pub const TMF882X_MODE_APP: 'APP'}
 
-pub const _tmf882X_CHIP_ID: u8 = 0x08;
-pub const _tmf882X_CHIP_ID_VALID_MASK: u8 = 0x3F;
-pub const _tmf882X_ROM_V2: u8 = 0x29;
+pub const TMF882X_CHIP_ID: u8 = 0x08;
+pub const TMF882X_CHIP_ID_VALID_MASK: u8 = 0x3F;
+pub const TMF882X_ROM_V2: u8 = 0x29;
 
-pub const _tmf882X_BL_DOWNLOAD_INIT: u8 = 0x14;
-pub const _tmf882X_BL_SET_ADDR: u8 = 0x43;
-pub const _tmf882X_BL_W_RAM: u8 = 0x41;
-pub const _tmf882X_BL_RAMREMAP_RESET: u8 = 0x11;
+pub const TMF882X_BL_DOWNLOAD_INIT: u8 = 0x14;
+pub const TMF882X_BL_SET_ADDR: u8 = 0x43;
+pub const TMF882X_BL_W_RAM: u8 = 0x41;
+pub const TMF882X_BL_RAMREMAP_RESET: u8 = 0x11;
 
-pub const _tmf882X_BL_FW_ADDR: u32 = 0x20000000; // Note, only the last 16 bit are respected
-pub const _tmf882X_BL_MAX_FW_DATA: u8 = 100; // Setting this to 128 leads to erroneous answers of the device
+pub const TMF882X_BL_FW_ADDR: u32 = 0x20000000; // Note, only the last 16 bit are respected
+pub const TMF882X_BL_MAX_FW_DATA: u8 = 100; // Setting this to 128 leads to erroneous answers of the device
 
-pub const _tmf882X_APP_CMD_MEASURE: u8 = 0x10;
-pub const _tmf882X_APP_CMD_CLEAR_STATUS: u8 = 0x11;
-pub const _tmf882X_APP_CMD_WRITE_CONFIG_PAGE: u8 = 0x15;
-pub const _tmf882X_APP_CMD_LOAD_CONFIG_PAGE_COMMON: u8 = 0x16;
-pub const _tmf882X_APP_CMD_LOAD_CONFIG_PAGE_SPAD_1: u8 = 0x17;
-pub const _tmf882X_APP_CMD_LOAD_CONFIG_PAGE_SPAD_2: u8 = 0x18;
-pub const _tmf882X_APP_CMD_LOAD_CONFIG_PAGE_FACTORY_CALIB: u8 = 0x19;
-pub const _tmf882X_APP_CMD_FACTORY_CALIBRATION: u8 = 0x20;
-pub const _tmf882X_APP_CMD_STOP: u8 = 0xFF;
+pub const TMF882X_APP_CMD_MEASURE: u8 = 0x10;
+pub const TMF882X_APP_CMD_CLEAR_STATUS: u8 = 0x11;
+pub const TMF882X_APP_CMD_WRITE_CONFIG_PAGE: u8 = 0x15;
+pub const TMF882X_APP_CMD_LOAD_CONFIG_PAGE_COMMON: u8 = 0x16;
+pub const TMF882X_APP_CMD_LOAD_CONFIG_PAGE_SPAD_1: u8 = 0x17;
+pub const TMF882X_APP_CMD_LOAD_CONFIG_PAGE_SPAD_2: u8 = 0x18;
+pub const TMF882X_APP_CMD_LOAD_CONFIG_PAGE_FACTORY_CALIB: u8 = 0x19;
+pub const TMF882X_APP_CMD_FACTORY_CALIBRATION: u8 = 0x20;
+pub const TMF882X_APP_CMD_STOP: u8 = 0xFF;
 
-pub const _tmf882X_MEASUREMENT_RESULT: u8 = 0x10;
-pub const _tmf882X_CONFIG_COMMON_CID: u8 = 0x16;
-pub const _tmf882X_CONFIG_PAGE_SIZE: u16 = 0x00BC;
+pub const TMF882X_MEASUREMENT_RESULT: u8 = 0x10;
+pub const TMF882X_CONFIG_COMMON_CID: u8 = 0x16;
+pub const TMF882X_CONFIG_PAGE_SIZE: u16 = 0x00BC;
 
-pub const _tmf882X_CMD_STAT_OK: u8 = 0x00;
-pub const _tmf882X_CMD_STAT_ACCEPTED: u8 = 0x01;
+pub const TMF882X_CMD_STAT_OK: u8 = 0x00;
+pub const TMF882X_CMD_STAT_ACCEPTED: u8 = 0x01;
 
-pub const _tmf882X_ACTIVE_RANGE_SHORT: u8 = 0x6E;
-pub const _tmf882X_ACTIVE_RANGE_LONG: u8 = 0x6F;
+pub const TMF882X_ACTIVE_RANGE_SHORT: u8 = 0x6E;
+pub const TMF882X_ACTIVE_RANGE_LONG: u8 = 0x6F;
 
-pub const _tmf882X_CALIBRATION_COMMON_CID: u8 = 0x19;
-pub const _tmf882X_CALIBRATION_PAGE_SIZE: u16 = 0x00BC;
+pub const TMF882X_CALIBRATION_COMMON_CID: u8 = 0x19;
+pub const TMF882X_CALIBRATION_PAGE_SIZE: u16 = 0x00BC;
 
 /* http://srecord.sourceforge.net/ */
-pub const tof_bin_image: [u8; 2476] = [
+pub const TOF_BIN_IMAGE: [u8; 2476] = [
     0x00, 0x80, 0x20, 0x00, 0x9D, 0x00, 0x20, 0x00, 0xD5, 0x20, 0x10, 0x00, 0xD7, 0x20, 0x10, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x09, 0x12, 0x56, 0x34, 0xAC, 0x09, 0x00, 0x00, 0xD9, 0x20, 0x10, 0x00,

@@ -9,6 +9,7 @@ use core::panic::PanicInfo;
 // use defmt_rtt as _;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
+use embassy_rp::config::Config;
 use embassy_rp::i2c::{self, Async, I2c, InterruptHandler};
 use embassy_rp::peripherals::{I2C0, USB};
 use embassy_rp::{bind_interrupts, usb};
@@ -26,7 +27,7 @@ type I2cBus = Mutex<NoopRawMutex, I2c<'static, I2C0, Async>>;
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     loop {
-        log::error!("{}", info);
+        log::error!("{info}");
     }
 }
 bind_interrupts!(struct Irqs {
@@ -42,7 +43,7 @@ async fn logger_task(usb: embassy_rp::Peri<'static, embassy_rp::peripherals::USB
 
 #[embassy_executor::main()]
 async fn main(spawner: Spawner) {
-    let p = embassy_rp::init(Default::default());
+    let p = embassy_rp::init(Config::default());
     log::info!("Here we go!");
     spawner.spawn(logger_task(p.USB).unwrap());
     // Shared I2C bus
@@ -90,13 +91,13 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus) {
 
     // let _sensor = DummyI2cDeviceDriver::new(i2c_dev, 0xC0);
     let mut sensor = sensor.expect("msg");
-    sensor.config.set_spad_map(SPAD::MAP_4x4_normal);
+    sensor.config.set_spad_map(SPAD::Map4x4Normal);
     sensor.write_configuration().await;
     sensor.start_measurements().await.expect("msg");
     loop {
         // log::info!("i2c task A");
         let res = sensor.wait_for_measurement().await.unwrap();
-        log::info!("{}\r\n", res);
+        log::info!("{res}\r\n");
 
         // Timer::after_millis(200).await;
     }
