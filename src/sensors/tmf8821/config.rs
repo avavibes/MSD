@@ -26,17 +26,17 @@ pub enum SPAD {
 impl SPAD {
     pub fn fov(&self) -> Fov {
         match &self {
-            SPAD::Map3x3Normal => Fov::Rectangular(33, 32),
-            SPAD::Map3x3MacroUpper => Fov::MacroRectangular(30, 17, 33),
-            SPAD::Map3x3MacroLower => Fov::MacroRectangular(17, 30, 33),
-            SPAD::Map3x3Wide => Fov::Rectangular(41, 52),
-            SPAD::Map3x3Checkerboard => Fov::Rectangular(33, 32),
-            SPAD::Map3x3InvCheckerboard => Fov::Rectangular(33, 32),
-            SPAD::Map4x4Normal => Fov::Rectangular(41, 52),
-            SPAD::Map4x4MacroUpper => Fov::MacroRectangular(30, 17, 33),
-            SPAD::Map4x4MacroLower => Fov::MacroRectangular(17, 30, 33),
-            SPAD::Map4x4Narrow => Fov::Rectangular(33, 42),
-            SPAD::Map3x6 => Fov::Rectangular(33, 60),
+            SPAD::Map3x3Normal => Fov::Rectangular(33 << 6, 32 << 6),
+            SPAD::Map3x3MacroUpper => Fov::MacroRectangular(30 << 6, 17 << 6, 33 << 6),
+            SPAD::Map3x3MacroLower => Fov::MacroRectangular(17 << 6, 30 << 6, 33 << 6),
+            SPAD::Map3x3Wide => Fov::Rectangular(41 << 6, 52 << 6),
+            SPAD::Map3x3Checkerboard => Fov::Rectangular(33 << 6, 32 << 6),
+            SPAD::Map3x3InvCheckerboard => Fov::Rectangular(33 << 6, 32 << 6),
+            SPAD::Map4x4Normal => Fov::Rectangular(41 << 6, 52 << 6),
+            SPAD::Map4x4MacroUpper => Fov::MacroRectangular(30 << 6, 17 << 6, 33 << 6),
+            SPAD::Map4x4MacroLower => Fov::MacroRectangular(17 << 6, 30 << 6, 33 << 6),
+            SPAD::Map4x4Narrow => Fov::Rectangular(33 << 6, 42 << 6),
+            SPAD::Map3x6 => Fov::Rectangular(33 << 6, 60 << 6),
         }
     }
     pub fn divisions(&self) -> (u8, u8) {
@@ -54,22 +54,43 @@ impl SPAD {
             SPAD::Map3x6 => (3, 6),
         }
     }
-    pub fn as_view(&self) -> View{
-        let center : (i32, i32);
-        let width : u32;
-        let height : u32;
-        match self.fov(){
-            Fov::Rectangular(w, h) => {center = (0,0); height = h; width = w;},
-            Fov::MacroRectangular(t, b, w) => {center = (0, ((t as i32 - b as i32)/2));height=t+b; width = w;},
+    pub fn as_view(&self) -> View {
+        let center: (i32, i32);
+        let width: u32;
+        let height: u32;
+        match self.fov() {
+            Fov::Rectangular(w, h) => {
+                center = (0, 0);
+                height = h;
+                width = w;
+            }
+            Fov::MacroRectangular(t, b, w) => {
+                center = (0, ((t as i32 - b as i32) / 2));
+                height = t + b;
+                width = w;
+            }
         };
-        return View{
+        return View {
             center,
             viewport: (width, height),
             divisions: self.divisions(),
-        }
+        };
     }
-    pub fn index_as_xy(&self, index: u8) -> Option<(u8,u8)>{
-        Some((index%self.divisions().0, index/self.divisions().0))
+    pub fn index_as_xy(&self, index: u8) -> Option<(u8, u8)> {
+        let i;
+        if self.divisions().0 == 4 {
+            if index == 8 || index == 17 {
+                return None;
+            }
+            if index > 8 {
+                i = index - 1;
+            } else {
+                i = index;
+            }
+        } else {
+            i = index;
+        }
+        Some((i % self.divisions().0, i / self.divisions().0))
     }
 }
 

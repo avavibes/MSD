@@ -51,15 +51,21 @@ pub struct Measurement {
     confidences: [u8; 18],
 }
 impl Measurement {
-    pub fn to_sensor_data(&self, mode: SPAD) -> [Option<SensorData>; 18]{
-        let mut res: [Option<SensorData>; 18] = [const { None };18];
+    pub fn to_sensor_data(&self, mode: SPAD) -> [Option<SensorData>; 18] {
+        let mut res: [Option<SensorData>; 18] = [const { None }; 18];
         // mode.fov()
         let vp = mode.as_view();
-        for i in 0..self.distances.iter().len(){
+        for i in 0..self.distances.iter().len() {
             let m = mode.index_as_xy(i as u8);
-            if let Some((x, y)) = m{
+            if let Some((x, y)) = m {
                 let segment_vp = vp.get_subdivision(x, y);
-                let sd = SensorData{ viewport: segment_vp, sensor: Sensors::TMF8821, range: Some(self.distances[i] as u32), confidence: self.confidences[i] as u32, max_range: 0 };
+                let sd = SensorData {
+                    viewport: segment_vp,
+                    sensor: Sensors::TMF8821,
+                    range: Some(self.distances[i] as u32),
+                    confidence: self.confidences[i] as u32,
+                    max_range: 0,
+                };
                 res[i] = Some(sd);
             }
         }
@@ -223,10 +229,10 @@ where
             .write_bl_command(TMF882X_BL_RAMREMAP_RESET, &[])
             .await?;
         device.check_bl_cmd_executed().await?;
-        
+
         let now = Instant::now();
         loop {
-            if now.elapsed().as_millis() > 3{
+            if now.elapsed().as_millis() > 3 {
                 break;
             }
             let app_id = device.read_reg(TMF882X_REG_APPID).await?;
@@ -275,10 +281,9 @@ where
         self.stop_measurements().await?;
         Ok(m)
     }
-    pub async fn write_configuration(&mut self) -> Result<(), Error<I2C::Error>>{
+    pub async fn write_configuration(&mut self) -> Result<(), Error<I2C::Error>> {
         self.write_app_command(TMF882X_APP_CMD_LOAD_CONFIG_PAGE_COMMON)
-            .await
-            ?;
+            .await?;
         self.check_app_cmd_executed(false, None, None).await?;
         let mut data: [u8; 25] = [0; 25];
         data[0] = TMF882X_REG_PERIOD_MS_LSB;
@@ -291,20 +296,24 @@ where
             .await?;
         Ok(())
     }
-    pub async fn factory_calibration(&mut self, ) -> Result<(), Error<I2C::Error>>{
-        let iter = 4;
+    pub async fn factory_calibration(&mut self) -> Result<(), Error<I2C::Error>> {
         let timeout = 500;
-        self.write_app_command(TMF882X_APP_CMD_FACTORY_CALIBRATION).await?;
-        self.check_app_cmd_executed(false, None, Some(timeout)).await?;
+        self.write_app_command(TMF882X_APP_CMD_FACTORY_CALIBRATION)
+            .await?;
+        self.check_app_cmd_executed(false, None, Some(timeout))
+            .await?;
 
         let calib_status = self.read_reg(TMF882X_REG_CALIBRATION_STATUS_FC).await?;
-        if calib_status!=0x00{
+        if calib_status != 0x00 {
             return Err(Error::NoAck);
         }
-        self.write_app_command(TMF882X_APP_CMD_LOAD_CONFIG_PAGE_FACTORY_CALIB).await?;
+        self.write_app_command(TMF882X_APP_CMD_LOAD_CONFIG_PAGE_FACTORY_CALIB)
+            .await?;
         self.check_app_cmd_executed(false, None, Some(50)).await?;
-        let mut raw_page: [u8; TMF882X_CALIBRATION_PAGE_SIZE+4] = [0; TMF882X_CALIBRATION_PAGE_SIZE+4];
-        self.read_bytes(TMF882X_REG_CONFIG_RESULT, raw_page.as_mut_slice()).await?;
+        let mut raw_page: [u8; TMF882X_CALIBRATION_PAGE_SIZE + 4] =
+            [0; TMF882X_CALIBRATION_PAGE_SIZE + 4];
+        self.read_bytes(TMF882X_REG_CONFIG_RESULT, raw_page.as_mut_slice())
+            .await?;
 
         Ok(())
     }
@@ -358,7 +367,7 @@ where
         &mut self,
         allow_accept: bool,
         ignore: Option<&[u8]>,
-        timeout: Option<u64>
+        timeout: Option<u64>,
     ) -> Result<(), Error<I2C::Error>> {
         let timeout: u64 = timeout.unwrap_or(100);
         let ignore = ignore.unwrap_or(&[]);
@@ -385,35 +394,34 @@ where
         Err(Error::NoAck)
     }
     pub async fn write_bl_command(&mut self, cmd: u8, res: &[u8]) -> Result<(), Error<I2C::Error>> {
-        let checksum: u8 = cmd + res.len() as u8 + Self::sum(res);
+        let checksum: u8 =
+            (cmd as u8 + res.len() as u8 + Self::sum(res)) & (0x000000FF as u8) ^ 0xFF;
+        let checksum = checksum as u8;
         let mut temp: [u8; 260] = [0; 260];
         log::info!("Checksum: {checksum}");
         temp[0] = TMF882X_REG_BL_CMD_STAT;
         temp[1] = cmd;
         temp[2] = (res.len()) as u8;
-        temp[3..(res.len() + 3)].copy_from_slice(res);
-
+        for i in 0..res.len() {
+            temp[3 + i] = res[i];
+        }
         temp[3 + res.len()] = checksum;
-
         let a = &temp[0..res.len() + 4];
         self.i2c.write(self.address, a).await?;
         Ok(())
     }
     pub async fn check_bl_cmd_executed(&mut self) -> Result<(), Error<I2C::Error>> {
-        const MAX_ACK: u64 = 100;
         let now = Instant::now();
-        while now.elapsed().as_millis() < MAX_ACK {
+        while now.elapsed().as_millis() < 100 {
             let mut status: [u8; 3] = [0; 3];
             let _ = self.read_bytes(TMF882X_REG_BL_CMD_STAT, &mut status).await;
             if status[1] == TMF882X_CMD_STAT_ACCEPTED {
-                // Command
                 continue;
-            }
-            if status[1] == TMF882X_CMD_STAT_OK {
-                // Command
+            } else if status[1] == TMF882X_CMD_STAT_OK {
                 return Ok(());
+            } else {
+                log::info!("Status: {:?}", status);
             }
-            log::info!("Status: {status:?}");
         }
         Err(Error::NoAck)
     }
@@ -423,19 +431,18 @@ where
             self.write_app_command(TMF882X_ACTIVE_RANGE_LONG).await?;
             self.check_app_cmd_executed(false, None, None).await?;
             let res = self.read_reg(TMF882X_REG_ACTIVE_RANGE).await?;
-            if res != TMF882X_ACTIVE_RANGE_LONG{
-                return Err(Error::NoAck)
+            if res != TMF882X_ACTIVE_RANGE_LONG {
+                return Err(Error::NoAck);
             }
-            return Ok(())
-        }
-        else if range == TofActiveRange::SHORT {
+            return Ok(());
+        } else if range == TofActiveRange::SHORT {
             self.write_app_command(TMF882X_ACTIVE_RANGE_SHORT).await?;
             self.check_app_cmd_executed(false, None, None).await?;
             let res = self.read_reg(TMF882X_REG_ACTIVE_RANGE).await?;
-            if res != TMF882X_ACTIVE_RANGE_SHORT{
-                return Err(Error::NoAck)
+            if res != TMF882X_ACTIVE_RANGE_SHORT {
+                return Err(Error::NoAck);
             }
-            return Ok(())
+            return Ok(());
         }
         Err(Error::ParseError)
     }
