@@ -1,4 +1,4 @@
-use crate::sensors::core::utils::View;
+use crate::sensors::{core::utils::View, tmf8821::constants::TMF882X_REG_I2C_SLAVE_ADDRESS};
 
 #[derive(Debug, PartialEq)]
 pub enum TofActiveRange {
@@ -70,11 +70,11 @@ impl SPAD {
                 width = w;
             }
         };
-        return View {
+        View {
             center,
             viewport: (width, height),
             divisions: self.divisions(),
-        };
+        }
     }
     pub fn index_as_xy(&self, index: u8) -> Option<(u8, u8)> {
         let i;
@@ -115,7 +115,7 @@ const _TMF8821_DEFAULT_CONFIGS: [u8; 24] = [
     4,  // ALG_SETTING_0 (at address 0x35)
     0,  // HIST_DUMP (at address 0x39)
     0,  // SPREAD_SPECTRUM (at address 0x3A)
-    82, // I2C_SLAVE_ADDRESS (at address 0x3B) --> 0x41 << 1
+    66<<1, // I2C_SLAVE_ADDRESS (at address 0x3B) --> 0x41 << 1
     0,  // OSC_TRIM_VALUE_LSB (at address 0x3C)
     0,  // OSC_TRIM_VALUE_MSB (at address 0x3D)
     0,  // I2C_ADDR_CHANGE (at address 0x3E)
@@ -138,5 +138,9 @@ impl TmfConfiguration {
     }
     pub fn set_spad_map(&mut self, sp: SPAD) {
         self.config[16] = sp as u8;
+    }
+    pub fn set_i2c_addr(&mut self, addr: u8){
+        self.config[20] = addr<<1;
+        log::info!("ADDRESS: {}", self.config[20]>>1);
     }
 }

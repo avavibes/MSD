@@ -1,5 +1,5 @@
 use crate::sensors::core::Sensors;
-
+pub mod utils;
 pub struct Sensitivity {
     pub view: Viewport,
     pub valid_sensors: [Option<Sensors>; 5],
