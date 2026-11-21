@@ -3,6 +3,7 @@
 #![no_std]
 #![no_main]
 
+use core::mem;
 use core::panic::PanicInfo;
 
 use bat_device::core::utils::panic_wait;
@@ -11,10 +12,12 @@ use bat_device::sensors::tmf8821::device::TMF8821;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
 use embassy_rp::config::Config;
-use embassy_rp::gpio::{Level, Output};
-use embassy_rp::i2c::{self, Async, I2c, InterruptHandler};
-use embassy_rp::peripherals::{I2C0, USB};
-use embassy_rp::{bind_interrupts, usb};
+use embassy_rp::gpio::{Input, Level, Output, Pull};
+use embassy_rp::i2c::{self, Async, I2c};
+use embassy_rp::peripherals::{DMA_CH0, I2C0, PIO0, USB};
+use embassy_rp::pio::{self, Pio};
+use embassy_rp::pio_programs::i2s::{PioI2sOut, PioI2sOutProgram};
+use embassy_rp::{Peri, bind_interrupts, dma, usb};
 use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 use embassy_sync::mutex::Mutex;
 use embassy_time::Timer;
@@ -29,8 +32,10 @@ fn panic(info: &PanicInfo) -> ! {
     }
 }
 bind_interrupts!(struct Irqs {
-    I2C0_IRQ => InterruptHandler<I2C0>;
+    I2C0_IRQ => i2c::InterruptHandler<I2C0>;
     USBCTRL_IRQ => usb::InterruptHandler<USB>;
+    PIO0_IRQ_0 => pio::InterruptHandler<PIO0>;
+    DMA_IRQ_0 => dma::InterruptHandler<DMA_CH0>;
 });
 #[embassy_executor::task]
 async fn logger_task(usb: embassy_rp::Peri<'static, embassy_rp::peripherals::USB>) {
@@ -55,6 +60,70 @@ async fn main(spawner: Spawner) {
     static I2C_BUS: StaticCell<I2cBus> = StaticCell::new();
     let i2c_bus = I2C_BUS.init(Mutex::new(i2c));
     spawner.spawn(i2c_task_a(i2c_bus, tmf_enable_pin).unwrap());
+
+
+    // PIO I2s Audio
+    const SAMPLE_RATE: u32 = 44100;
+    const BIT_DEPTH: u32 = 16;
+    let Pio { mut common, sm0, .. } = Pio::new(p.PIO0, Irqs);
+    let fade_input = Input::new(p.PIN_10, Pull::Up);
+    let bit_clock_pin = p.PIN_18;
+    let left_right_clock_pin = p.PIN_19;
+    let data_pin = p.PIN_20;
+
+    let program = PioI2sOutProgram::new(&mut common);
+    let i2s: PioI2sOut<'_, PIO0, 0> = PioI2sOut::new(
+        &mut common,
+        sm0,
+        p.DMA_CH0,
+        Irqs,
+        data_pin,
+        bit_clock_pin,
+        left_right_clock_pin,
+        SAMPLE_RATE,
+        BIT_DEPTH,
+        &program,
+    );
+    spawner.spawn(i2s_task_a(i2s, fade_input).unwrap())
+    
+}
+
+#[embassy_executor::task]
+async fn i2s_task_a(mut i2s: PioI2sOut<'static, PIO0, 0>, fade: Input<'static>){
+    i2s.start();
+
+    const BUFFER_SIZE: usize = 960;
+    static DMA_BUFFER: StaticCell<[u32; BUFFER_SIZE * 2]> = StaticCell::new();
+    let dma_buffer = DMA_BUFFER.init_with(|| [0u32; BUFFER_SIZE * 2]);
+    let (mut back_buffer, mut front_buffer) = dma_buffer.split_at_mut(BUFFER_SIZE);
+
+    let mut fade_value: i32 = 0;
+    let mut phase: i32 = 0;
+    loop {
+        // trigger transfer of front buffer data to the pio fifo
+        // but don't await the returned future, yet
+        let dma_future = i2s.write(front_buffer);
+
+        // fade in audio when GPIO 0 pin is shorted to GND
+        let fade_target = if fade.is_low() { i32::MAX } else { 0 };
+
+        // fill back buffer with fresh audio samples before awaiting the dma future
+        for s in back_buffer.iter_mut() {
+            // exponential approach of fade_value => fade_target
+            fade_value += (fade_target - fade_value) >> 14;
+            // generate triangle wave with amplitude and frequency based on fade value
+            phase = (phase + (fade_value >> 22)) & 0xffff;
+            let triangle_sample = (phase as i16 as i32).abs() - 16384;
+            let sample = (triangle_sample * (fade_value >> 15)) >> 16;
+            // duplicate mono sample into lower and upper half of dma word
+            *s = (sample as u16 as u32) * 0x10001;
+        }
+
+        // now await the dma future. once the dma finishes, the next buffer needs to be queued
+        // within DMA_DEPTH / SAMPLE_RATE = 8 / 48000 seconds = 166us
+        dma_future.await;
+        mem::swap(&mut back_buffer, &mut front_buffer);
+    }
 }
 
 #[embassy_executor::task]

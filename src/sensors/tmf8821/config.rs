@@ -95,9 +95,9 @@ impl SPAD {
 }
 
 const _TMF8821_DEFAULT_CONFIGS: [u8; 24] = [
-    33, // PERIOD_MS_LSB (at address 0x24)
+    33, // PERIOD_MS_LSB (at address 0x24) // For 30hz
     0,  // PERIOD_MS_MSB (at address 0x25)
-    25, // KILO_ITERATIONS_LSB (at address 0x26)
+    25, // KILO_ITERATIONS_LSB (at address 0x26) 
     2,  // KILO_ITERATIONS_MSB (at address 0x27)
     0,  // INT_THRESHOLD_LOW_LSB (at address 0x28)
     0,  // INT_THRESHOLD_LOW_MSB (at address 0x29)

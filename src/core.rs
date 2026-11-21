@@ -1,5 +1,6 @@
 use crate::sensors::core::Sensors;
 pub mod utils;
+const DEGREE_SHIFT: u8 = 12;
 pub struct Sensitivity {
     pub view: Viewport,
     pub valid_sensors: [Option<Sensors>; 5],
@@ -22,5 +23,10 @@ pub struct Viewport {
     pub center: (i32, i32),
     pub viewport: (u32, u32),
 }
+// impl Viewport{
+//     pub fn from_degrees(center: (i32, i32), viewport: (u32, u32)) -> Self{
+//         return Viewport { center: (center.0<<DEGREE_SHIFT, center.1<<DEGREE_SHIFT), viewport: (viewport.0<<DEGREE_SHIFT, viewport.1<<DEGREE_SHIFT) }
+//     }
+// }
 
 pub struct Curve {}

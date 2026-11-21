@@ -7,7 +7,6 @@ use embedded_hal_async::{self as hal, delay::DelayNs};
 
 use hal::i2c::SevenBitAddress;
 
-use crate::core::utils::panic_wait;
 use crate::sensors::core::Sensors;
 use crate::sensors::core::utils::SensorData;
 use crate::sensors::tmf8821::config::{SPAD, TofActiveRange};
