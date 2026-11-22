@@ -46,3 +46,4 @@ weather-utils = { version = "0.5.0", features = ["no-std"] }
 embassy-sync = { version = "0.8.0" }
 static_cell = { version = "2.1.1" }
 derive_more = { version = "2", default-features = false, features=["display"]}
+hcsr04_async = { version = "0.5.0" }

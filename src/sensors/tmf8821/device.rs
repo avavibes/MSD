@@ -129,23 +129,25 @@ impl<I2C> TMF8821<I2C>
 where
     I2C: hal::i2c::I2c,
 {
+    /// Initialize a tmf8821 sensor object
     pub async fn new(
         i2c: I2C,
         address: SevenBitAddress,
         delay: embassy_time::Delay,
-        pin: Output<'static>
+        pin: Output<'static>,
     ) -> Self {
-        let device = Self {
+        Self {
             address,
             delay,
             i2c,
             pin,
             initialized: false,
             config: TmfConfiguration::new_default(),
-        };
-        device
+        }
     }
-    pub async fn init(&mut self)->Result<(), Error<I2C::Error>>{
+
+    /// Setup the sensor, flashing firmware.
+    pub async fn init(&mut self) -> Result<(), Error<I2C::Error>> {
         self.pin.set_low();
         self.initialized = false;
         self.delay.delay_ms(10).await;
@@ -178,8 +180,7 @@ where
                 self.write_reg(TMF882X_REG_ENABLE, en_reg | 0x01).await?;
             } else if en_reg & 0x0F == 0b0110 {
                 // log::trace!("Device in measurement, resetting");
-                self
-                    .write_reg(TMF882X_REG_CMD_STAT, TMF882X_APP_CMD_STOP)
+                self.write_reg(TMF882X_REG_CMD_STAT, TMF882X_APP_CMD_STOP)
                     .await?;
             }
             self.delay.delay_ms(1).await;
@@ -208,17 +209,15 @@ where
             return Err(Error::ChipNotDetected);
         }
         let res = [0x29];
-        self
-            .write_bl_command(TMF882X_BL_DOWNLOAD_INIT, &res)
+        self.write_bl_command(TMF882X_BL_DOWNLOAD_INIT, &res)
             .await?;
         self.check_bl_cmd_executed().await?;
 
-        self
-            .write_bl_command(
-                TMF882X_BL_SET_ADDR,
-                &[((TMF882X_BL_FW_ADDR >> 8) as u8), TMF882X_BL_FW_ADDR as u8],
-            )
-            .await?;
+        self.write_bl_command(
+            TMF882X_BL_SET_ADDR,
+            &[((TMF882X_BL_FW_ADDR >> 8) as u8), TMF882X_BL_FW_ADDR as u8],
+        )
+        .await?;
         self.check_bl_cmd_executed().await?;
 
         let mut size_downloaded = 0;
@@ -235,18 +234,12 @@ where
             log::info!("{}/{}", size_downloaded, TOF_BIN_IMAGE.len());
         }
         log::info!("Firmware complete");
-        
-        
+
         self.write_reg(TMF882X_REG_ENABLE, 0x21).await?; // set bit 0 (general enable) and bit 5 (run from RAM)
-        
-        
-        self
-            .write_bl_command(TMF882X_BL_RAMREMAP_RESET, &[])
+
+        self.write_bl_command(TMF882X_BL_RAMREMAP_RESET, &[])
             .await?;
         self.check_bl_cmd_executed().await?;
-
-        
-        
 
         let now = Instant::now();
         loop {
@@ -274,22 +267,23 @@ where
         log::error!("Failed to init");
         Err(Error::ChipNotDetected)
     }
-    pub fn get_address(&self) -> u8{
-        if self.initialized{
+    pub fn get_address(&self) -> u8 {
+        if self.initialized {
             self.address
-        }else{
+        } else {
             TMF882X_DEFAULT_I2C_ADDR
         }
     }
-    pub async fn set_addr(&mut self) -> Result<(), Error<I2C::Error>>{
-        
+
+    /// Currently not working, sets the address to the one specified in config.
+    pub async fn set_addr(&mut self) -> Result<(), Error<I2C::Error>> {
         self.config.set_i2c_addr(self.address);
         // self.write_app_command(TMF882X_APP_CMD_LOAD_CONFIG_PAGE_COMMON).await?;
         // self.check_app_cmd_executed(false, None, None).await?;
         self.delay.delay_ms(100).await;
         self.config.config[12] = 0;
         self.config.config[13] = 0;
-        self.config.config[20] = 66<<1;
+        self.config.config[20] = 66 << 1;
         self.config.config[23] = 0;
         self.write_configuration().await?;
         // self.write_reg(TMF882X_REG_SPAD_MAP_ID, SPAD::Map3x6 as u8).await?;
@@ -306,15 +300,14 @@ where
         // self.write_app_command(TMF882X_APP_CMD_LOAD_CONFIG_PAGE_COMMON).await?;
         // self.check_app_cmd_executed(false, Some(&[0x03]), None).await?;
         // let mut data = [0;24];
-        
+
         // self.read_bytes(TMF882X_REG_PERIOD_MS_LSB, &mut data).await?;
         // log::error!("ADDR FROM CFG: {}", data[20]>>1);
         // log::error!("AAAAAAA: {}", data[23]);
         // log::info!("READ CONFIG: {:?}", data);
         // log::info!("Wrote config");
         self.write_bl_command(0x21, &[]).await?;
-        
-        
+
         // for i in 0..255{
         //     let mut a: [u8; 1] = [0];
         //     let r = self.i2c.read(i, &mut a).await;
@@ -324,15 +317,14 @@ where
         // }
         log::info!("Wrote set addr cmd");
 
-        
         // self.delay.delay_ms(100).await;
         // self.delay.delay_ms(1000).await;
         // self.check_bl_cmd_executed().await?;
         self.delay.delay_ms(100).await;
-        for i in 0..255{
+        for i in 0..255 {
             let mut a: [u8; 1] = [0];
             let r = self.i2c.read(i, &mut a).await;
-            if r.is_ok(){
+            if r.is_ok() {
                 log::info!("Responded on: {i}");
             }
         }
@@ -348,14 +340,7 @@ where
         log::info!("cmd executed");
         Ok(())
     }
-    pub async fn read_reg(&mut self, reg: u8) -> Result<u8, Error<I2C::Error>> {
-        
-        let mut result = [0u8];
-        self.i2c
-            .write_read(self.get_address(), &[reg], &mut result)
-            .await?;
-        Ok(result[0])
-    }
+
     pub async fn start_measurements(&mut self) -> Result<(), Error<I2C::Error>> {
         // for i in 0..255{
         //     let mut a: [u8; 1] = [0];
@@ -382,21 +367,28 @@ where
         self.stop_measurements().await?;
         Ok(m)
     }
+    /// Writes the current configuration to the sensor. 
     pub async fn write_configuration(&mut self) -> Result<(), Error<I2C::Error>> {
         log::info!("1");
         self.write_app_command(TMF882X_APP_CMD_LOAD_CONFIG_PAGE_COMMON)
             .await?;
         log::info!("2");
         // self.check_app_cmd_executed(false, None, None).await?;
-        let mut config: [u8; 4] = [0;4];
-        self.read_bytes(TMF882X_REG_CONFIG_RESULT, &mut config).await?;
-        let size: u32 = config[2] as u32 + ((config[3] as u32) <<8);
-        if !(config[0]==TMF882X_CONFIG_COMMON_CID && size == TMF882X_CONFIG_PAGE_SIZE){
+        let mut config: [u8; 4] = [0; 4];
+        self.read_bytes(TMF882X_REG_CONFIG_RESULT, &mut config)
+            .await?;
+        let size: u32 = config[2] as u32 + ((config[3] as u32) << 8);
+        if !(config[0] == TMF882X_CONFIG_COMMON_CID && size == TMF882X_CONFIG_PAGE_SIZE) {
             log::info!("INCORRECT CONFIG SIZE");
             log::info!("{:?}", config);
-            log::info!("{} {} {} {}", config[0] ,TMF882X_CONFIG_COMMON_CID, {size}, TMF882X_CONFIG_PAGE_SIZE);
-            
-        } 
+            log::info!(
+                "{} {} {} {}",
+                config[0],
+                TMF882X_CONFIG_COMMON_CID,
+                { size },
+                TMF882X_CONFIG_PAGE_SIZE
+            );
+        }
         log::info!("3");
         let mut data: [u8; 25] = [0; 25];
         data[0] = TMF882X_REG_PERIOD_MS_LSB;
@@ -433,6 +425,7 @@ where
 
         Ok(())
     }
+    /// When measurement is enabled, wait for one and then return it. 
     pub async fn wait_for_measurement(&mut self) -> Result<Measurement, Error<I2C::Error>> {
         let now = Instant::now();
         const MAX_MEASUREMENT_WAIT: u64 = 100;
@@ -459,11 +452,21 @@ where
             None => Err(Error::ParseError),
         }
     }
-    pub async fn write_reg(&mut self, reg: u8, data: u8) -> Result<(), Error<I2C::Error>> {
+    /// Read the specified register
+    async fn read_reg(&mut self, reg: u8) -> Result<u8, Error<I2C::Error>> {
+        let mut result = [0u8];
+        self.i2c
+            .write_read(self.get_address(), &[reg], &mut result)
+            .await?;
+        Ok(result[0])
+    }
+    /// Writes the provided value to the specific register. 
+    async fn write_reg(&mut self, reg: u8, data: u8) -> Result<(), Error<I2C::Error>> {
         self.i2c.write(self.get_address(), &[reg, data]).await?;
         Ok(())
     }
-    pub async fn read_bytes(&mut self, reg: u8, res: &mut [u8]) -> Result<(), Error<I2C::Error>> {
+    /// Reads a number of bytes into the provided buffer. 
+    async fn read_bytes(&mut self, reg: u8, res: &mut [u8]) -> Result<(), Error<I2C::Error>> {
         // let mut res = &target;
         self.i2c.write_read(self.get_address(), &[reg], res).await?;
         log::info!("Successful read from {}", self.get_address());
@@ -476,11 +479,11 @@ where
         }
         a
     }
-    pub async fn write_app_command(&mut self, cmd: u8) -> Result<(), Error<I2C::Error>> {
+    async fn write_app_command(&mut self, cmd: u8) -> Result<(), Error<I2C::Error>> {
         self.write_reg(TMF882X_REG_CMD_STAT, cmd).await?;
         Ok(())
     }
-    pub async fn check_app_cmd_executed(
+    async fn check_app_cmd_executed(
         &mut self,
         allow_accept: bool,
         ignore: Option<&[u8]>,
@@ -510,9 +513,8 @@ where
         }
         Err(Error::NoAck)
     }
-    pub async fn write_bl_command(&mut self, cmd: u8, res: &[u8]) -> Result<(), Error<I2C::Error>> {
-        let checksum: u8 =
-            (cmd + res.len() as u8 + Self::sum(res)) ^ 0xFF;
+    async fn write_bl_command(&mut self, cmd: u8, res: &[u8]) -> Result<(), Error<I2C::Error>> {
+        let checksum: u8 = (cmd + res.len() as u8 + Self::sum(res)) ^ 0xFF;
         let mut temp: [u8; 260] = [0; 260];
         log::info!("Checksum: {checksum}");
         temp[0] = TMF882X_REG_BL_CMD_STAT;
@@ -524,14 +526,14 @@ where
         self.i2c.write(self.get_address(), a).await?;
         Ok(())
     }
-    pub async fn check_bl_cmd_executed(&mut self) -> Result<(), Error<I2C::Error>> {
+    async fn check_bl_cmd_executed(&mut self) -> Result<(), Error<I2C::Error>> {
         let now = Instant::now();
-        
+
         log::info!("addr for check bl cmd {}", self.get_address());
         while now.elapsed().as_millis() < 100 {
             let mut status: [u8; 3] = [0xff; 3];
             let _ = self.read_bytes(TMF882X_REG_BL_CMD_STAT, &mut status).await;
-            
+
             if status[1] == TMF882X_CMD_STAT_ACCEPTED {
                 continue;
             } else if status[1] == TMF882X_CMD_STAT_OK {
@@ -540,10 +542,10 @@ where
                 log::info!("Status: {:?}", status);
             }
         }
-        for i in 0..255{
+        for i in 0..255 {
             let mut a: [u8; 1] = [0];
             let r = self.i2c.read(i, &mut a).await;
-            if r.is_ok(){
+            if r.is_ok() {
                 log::info!("Responded on: {i}");
             }
         }
