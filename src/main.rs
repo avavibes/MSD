@@ -207,6 +207,25 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
     if r.is_err() {
         panic_wait("Failed to write config to sensor").await;
     }
+    let res = sensor.single_measurement().await;
+    if let Ok(res) = res {
+        log::info!("{res}");
+    } else {
+        log::info!("Failed to get sensor measurement!!!");
+        Timer::after_millis(1000).await;
+    }
+    let _ = sensor.standby().await;
+    Timer::after_millis(1000).await;
+    // let res = sensor.single_measurement().await;
+    // if let Ok(res) = res {
+    //     log::info!("{res}");
+    // } else {
+    //     log::info!("Failed to get sensor measurement!!!");
+    //     Timer::after_millis(1000).await;
+    // }
+    let now = Instant::now();
+    let _ = sensor.wake().await;
+    log::info!("Wake took {} ms", now.elapsed().as_millis());
     // let r = sensor.set_addr().await;
     // if r.is_err() {
     //     panic_wait("Failed to set addr").await;
@@ -230,6 +249,7 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
     //         Timer::after_millis(1000).await;
     //     }
     // log::info!("SETTING SPAD DIFF");
+    
     loop {
         let res = sensor.single_measurement().await;
         if let Ok(res) = res {

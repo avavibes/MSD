@@ -2,6 +2,7 @@ use core::cmp::min;
 
 use derive_more::Display;
 use embassy_rp::gpio::Output;
+use embassy_rp::pac::io::vals::Oeover::ENABLE;
 use embassy_time::Instant;
 use embedded_hal_async::{self as hal, delay::DelayNs};
 
@@ -367,6 +368,33 @@ where
         self.stop_measurements().await?;
         Ok(m)
     }
+    pub async fn wake(&mut self) -> Result<(), Error<I2C::Error>>{
+        let cpu_enable_val = self.read_reg(TMF882X_REG_ENABLE).await?;
+        let val = cpu_enable_val&0x01;
+        if val == 0{
+            let cpu_enable_val = cpu_enable_val|0x01;
+            self.write_reg(TMF882X_REG_ENABLE, cpu_enable_val).await?;
+            log::info!("Enabled tmf882x");
+            self.is_cpu_ready().await?;
+        }
+        else{
+            log::info!("TMF882X Already Enabled")
+        }
+        Ok(())
+    }
+    pub async fn standby(&mut self) -> Result<(), Error<I2C::Error>>{
+        let cpu_enable_val = self.read_reg(TMF882X_REG_ENABLE).await?;
+        let val = cpu_enable_val&0x01;
+        if val > 0{
+            let cpu_enable_val = cpu_enable_val & !0x01;
+            self.write_reg(TMF882X_REG_ENABLE, cpu_enable_val).await?;
+            log::info!("Sleeping tmf8821");
+        }
+        else{
+            log::info!("Already asleep!");
+        }
+        Ok(())
+    }
     /// Writes the current configuration to the sensor. 
     pub async fn write_configuration(&mut self) -> Result<(), Error<I2C::Error>> {
         log::info!("1");
@@ -512,6 +540,21 @@ where
             log::info!("BAD VALUE {status}");
         }
         Err(Error::NoAck)
+    }
+    async fn is_cpu_ready(&mut self) -> Result<(), Error<I2C::Error>>{
+        const CPU_READY_WAIT: u64 = 1000;
+        let now = Instant::now();
+        loop {
+            if now.elapsed().as_millis() > CPU_READY_WAIT{
+                break;
+            }
+            let res = self.read_reg(TMF882X_REG_ENABLE).await?;
+            if res & 0x40 > 0{
+                return Ok(());
+            }
+            self.delay.delay_ms(1).await;
+        }
+        Err(Error::ChipNotDetected)
     }
     async fn write_bl_command(&mut self, cmd: u8, res: &[u8]) -> Result<(), Error<I2C::Error>> {
         let checksum: u8 = (cmd + res.len() as u8 + Self::sum(res)) ^ 0xFF;
