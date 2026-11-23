@@ -1,0 +1,1 @@
+-- Using a lookup table for fast fixed point sin and cosine. 

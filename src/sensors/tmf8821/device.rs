@@ -2,13 +2,12 @@ use core::cmp::min;
 
 use derive_more::Display;
 use embassy_rp::gpio::Output;
-use embassy_rp::pac::io::vals::Oeover::ENABLE;
 use embassy_time::Instant;
 use embedded_hal_async::{self as hal, delay::DelayNs};
 
 use hal::i2c::SevenBitAddress;
 
-use crate::sensors::core::Sensors;
+use crate::sensors::core::SensorType;
 use crate::sensors::core::utils::SensorData;
 use crate::sensors::tmf8821::config::{SPAD, TofActiveRange};
 use crate::sensors::tmf8821::constants::*;
@@ -61,7 +60,7 @@ impl Measurement {
                 let segment_vp = vp.get_subdivision(x, y);
                 let sd = SensorData {
                     viewport: segment_vp,
-                    sensor: Sensors::TMF8821,
+                    sensor: SensorType::TMF8821,
                     range: Some(self.distances[i] as u32),
                     confidence: self.confidences[i] as u32,
                     max_range: 0,
@@ -368,34 +367,32 @@ where
         self.stop_measurements().await?;
         Ok(m)
     }
-    pub async fn wake(&mut self) -> Result<(), Error<I2C::Error>>{
+    pub async fn wake(&mut self) -> Result<(), Error<I2C::Error>> {
         let cpu_enable_val = self.read_reg(TMF882X_REG_ENABLE).await?;
-        let val = cpu_enable_val&0x01;
-        if val == 0{
-            let cpu_enable_val = cpu_enable_val|0x01;
+        let val = cpu_enable_val & 0x01;
+        if val == 0 {
+            let cpu_enable_val = cpu_enable_val | 0x01;
             self.write_reg(TMF882X_REG_ENABLE, cpu_enable_val).await?;
             log::info!("Enabled tmf882x");
             self.is_cpu_ready().await?;
-        }
-        else{
+        } else {
             log::info!("TMF882X Already Enabled")
         }
         Ok(())
     }
-    pub async fn standby(&mut self) -> Result<(), Error<I2C::Error>>{
+    pub async fn standby(&mut self) -> Result<(), Error<I2C::Error>> {
         let cpu_enable_val = self.read_reg(TMF882X_REG_ENABLE).await?;
-        let val = cpu_enable_val&0x01;
-        if val > 0{
+        let val = cpu_enable_val & 0x01;
+        if val > 0 {
             let cpu_enable_val = cpu_enable_val & !0x01;
             self.write_reg(TMF882X_REG_ENABLE, cpu_enable_val).await?;
             log::info!("Sleeping tmf8821");
-        }
-        else{
+        } else {
             log::info!("Already asleep!");
         }
         Ok(())
     }
-    /// Writes the current configuration to the sensor. 
+    /// Writes the current configuration to the sensor.
     pub async fn write_configuration(&mut self) -> Result<(), Error<I2C::Error>> {
         log::info!("1");
         self.write_app_command(TMF882X_APP_CMD_LOAD_CONFIG_PAGE_COMMON)
@@ -453,7 +450,7 @@ where
 
         Ok(())
     }
-    /// When measurement is enabled, wait for one and then return it. 
+    /// When measurement is enabled, wait for one and then return it.
     pub async fn wait_for_measurement(&mut self) -> Result<Measurement, Error<I2C::Error>> {
         let now = Instant::now();
         const MAX_MEASUREMENT_WAIT: u64 = 100;
@@ -488,12 +485,12 @@ where
             .await?;
         Ok(result[0])
     }
-    /// Writes the provided value to the specific register. 
+    /// Writes the provided value to the specific register.
     async fn write_reg(&mut self, reg: u8, data: u8) -> Result<(), Error<I2C::Error>> {
         self.i2c.write(self.get_address(), &[reg, data]).await?;
         Ok(())
     }
-    /// Reads a number of bytes into the provided buffer. 
+    /// Reads a number of bytes into the provided buffer.
     async fn read_bytes(&mut self, reg: u8, res: &mut [u8]) -> Result<(), Error<I2C::Error>> {
         // let mut res = &target;
         self.i2c.write_read(self.get_address(), &[reg], res).await?;
@@ -541,15 +538,15 @@ where
         }
         Err(Error::NoAck)
     }
-    async fn is_cpu_ready(&mut self) -> Result<(), Error<I2C::Error>>{
+    async fn is_cpu_ready(&mut self) -> Result<(), Error<I2C::Error>> {
         const CPU_READY_WAIT: u64 = 1000;
         let now = Instant::now();
         loop {
-            if now.elapsed().as_millis() > CPU_READY_WAIT{
+            if now.elapsed().as_millis() > CPU_READY_WAIT {
                 break;
             }
             let res = self.read_reg(TMF882X_REG_ENABLE).await?;
-            if res & 0x40 > 0{
+            if res & 0x40 > 0 {
                 return Ok(());
             }
             self.delay.delay_ms(1).await;

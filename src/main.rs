@@ -7,10 +7,11 @@ use core::mem;
 use core::panic::PanicInfo;
 
 use bat_device::config::{
-    ENABLE_HCSR04, ENABLE_I2S, ENABLE_START_WAIT, ENABLE_TMF8821, ENABLE_USB_LOGGING, I2C0_FREQ,
-    USB_LOG_SIZE,
+    DEGREE_SHIFT, ENABLE_HCSR04, ENABLE_I2S, ENABLE_START_WAIT, ENABLE_TEST_FPSIN, ENABLE_TMF8821,
+    ENABLE_USB_LOGGING, I2C0_FREQ, USB_LOG_SIZE,
 };
 use bat_device::core::utils::panic_wait;
+use bat_device::sensors::core::utils::{fixed_to_float, fpcos, fpsin};
 use bat_device::sensors::tmf8821::config::SPAD;
 use bat_device::sensors::tmf8821::device::TMF8821;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
@@ -61,6 +62,18 @@ async fn main(spawner: Spawner) {
         for i in 0..3 {
             Timer::after_secs(1).await;
             log::info!("Startup wait -- {}", i);
+        }
+    }
+    if ENABLE_TEST_FPSIN {
+        for val in [0.0, 90.0, 180.1, 270.0, 360.0, 3.5, 8.0, 20.0, 30.0, 45.0] {
+            // let val = 3.5;
+            let test = (val * ((1 << DEGREE_SHIFT) as f64)) as i32;
+            let test_as_f = fixed_to_float(test);
+            let fastsin = fpsin(test);
+            let as_f = fixed_to_float(fastsin);
+            let fastcos = fpcos(test);
+            let c_as_f = fixed_to_float(fastcos);
+            log::info!("{val} - {test} - {test_as_f} - {fastsin} -- {as_f} - {c_as_f}");
         }
     }
     if ENABLE_TMF8821 {
@@ -249,7 +262,7 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
     //         Timer::after_millis(1000).await;
     //     }
     // log::info!("SETTING SPAD DIFF");
-    
+
     loop {
         let res = sensor.single_measurement().await;
         if let Ok(res) = res {

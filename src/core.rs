@@ -1,9 +1,9 @@
-use crate::sensors::core::Sensors;
+use crate::sensors::core::SensorType;
 pub mod utils;
 // const DEGREE_SHIFT: u8 = 12;
 pub struct Sensitivity {
     pub view: Viewport,
-    pub valid_sensors: [Option<Sensors>; 5],
+    pub valid_sensors: [Option<SensorType>; 5],
     pub allow_partial: bool,
     pub alert_type: u32,
     pub curve: Curve,

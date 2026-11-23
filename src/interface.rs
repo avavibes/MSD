@@ -1,5 +1,1 @@
-
-pub struct UserInterface {
-    
-
-}
+pub struct UserInterface {}
