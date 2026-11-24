@@ -3,6 +3,7 @@ pub const ENABLE_I2S: bool = false;
 pub const ENABLE_HCSR04: bool = false;
 pub const ENABLE_USB_LOGGING: bool = true;
 pub const ENABLE_TEST_FPSIN: bool = false;
+pub const LOOP_SPAD_MAPS: bool = false;
 
 pub const ENABLE_START_WAIT: bool = true;
 
@@ -18,5 +19,7 @@ pub const I2C1_FREQ: u32 = 400000;
 // point value. (m.n), so as we are using 32 bit
 // values, they will retain the necessary precision.
 //
-pub const DEGREE_SHIFT: i32 = 20;
-// pub const
+pub const DEGREE_SHIFT: i32 = 16;
+
+// device height above the ground in mm
+pub const DEVICE_HEIGHT: i32 = 1000;

@@ -38,7 +38,15 @@ where
 }
 #[derive(Debug, Display)]
 // #[display("result_number: {:?}, temperature: {:?}, number_valid_results: {:?}, ambient_light: {:?}, photon_count: {:?}, reference_count: {:?}, sys_tick: {:?},\r\ndistances: {:?}, \r\nconfidences: {:?}", result_number, temperature, number_valid_results, ambient_light, photon_count, reference_count, sys_tick, distances, confidences)]
-#[display("{} {:?} {:?}", temperature, distances, confidences)]
+#[display(
+    "{:?}-{} {} {} {:?} {:?}",
+    spad,
+    ambient_light,
+    x,
+    y,
+    distances,
+    confidences
+)]
 pub struct Measurement {
     result_number: u8,
     temperature: u8,
@@ -49,6 +57,9 @@ pub struct Measurement {
     sys_tick: u32,
     distances: [u16; 18],
     confidences: [u8; 18],
+    x: u8,
+    y: u8,
+    spad: SPAD,
 }
 impl Measurement {
     pub fn to_sensor_data(&self, mode: SPAD) -> [Option<SensorData>; 18] {
@@ -70,7 +81,7 @@ impl Measurement {
         }
         res
     }
-    pub fn from_data(data: &[u8]) -> Option<Measurement> {
+    pub fn from_data(data: &[u8], mode: SPAD) -> Option<Measurement> {
         let offset = TMF882X_REG_CONFIG_RESULT;
         let mut distances: [u16; 18] = [0; 18];
         let mut confidences: [u8; 18] = [0; 18];
@@ -114,6 +125,9 @@ impl Measurement {
                 + ((sys_tick_results[3] as u32) << 24),
             confidences,
             distances,
+            x: mode.divisions().0,
+            y: mode.divisions().1,
+            spad: mode,
         })
     }
 }
@@ -471,7 +485,7 @@ where
         if res != 0x00 {
             return Err(Error::NoAck);
         }
-        let mes = Measurement::from_data(&measurement_data);
+        let mes = Measurement::from_data(&measurement_data, self.config.spad);
         match mes {
             Some(s) => Ok(s),
             None => Err(Error::ParseError),

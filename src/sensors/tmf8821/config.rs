@@ -10,6 +10,7 @@ pub enum Fov {
     Rectangular(u32, u32),           // width/height
     MacroRectangular(u32, u32, u32), // top, bottom, width
 }
+#[derive(Debug, Clone, Copy)]
 pub enum SPAD {
     Map3x3Normal = 1,     // 33x32
     Map3x3MacroUpper = 2, // 30 up, 17 down, 33
@@ -122,11 +123,13 @@ const _TMF8821_DEFAULT_CONFIGS: [u8; 24] = [
 ];
 pub struct TmfConfiguration {
     pub config: [u8; 24],
+    pub spad: SPAD,
 }
 impl TmfConfiguration {
     pub fn new_default() -> Self {
         TmfConfiguration {
             config: _TMF8821_DEFAULT_CONFIGS,
+            spad: SPAD::Map3x3Normal,
         }
     }
     pub fn period_ms(&self) -> u16 {
@@ -137,6 +140,7 @@ impl TmfConfiguration {
         self.config[1] = (value >> 8) as u8;
     }
     pub fn set_spad_map(&mut self, sp: SPAD) {
+        self.spad = sp;
         self.config[16] = sp as u8;
     }
     pub fn set_i2c_addr(&mut self, addr: u8) {
