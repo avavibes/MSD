@@ -1,4 +1,4 @@
-use crate::sensors::core::utils::View;
+use crate::{config::DEGREE_SHIFT, sensors::core::utils::View};
 
 #[derive(Debug, PartialEq)]
 pub enum TofActiveRange {
@@ -27,17 +27,25 @@ pub enum SPAD {
 impl SPAD {
     pub fn fov(&self) -> Fov {
         match &self {
-            SPAD::Map3x3Normal => Fov::Rectangular(33 << 6, 32 << 6),
-            SPAD::Map3x3MacroUpper => Fov::MacroRectangular(30 << 6, 17 << 6, 33 << 6),
-            SPAD::Map3x3MacroLower => Fov::MacroRectangular(17 << 6, 30 << 6, 33 << 6),
-            SPAD::Map3x3Wide => Fov::Rectangular(41 << 6, 52 << 6),
-            SPAD::Map3x3Checkerboard => Fov::Rectangular(33 << 6, 32 << 6),
-            SPAD::Map3x3InvCheckerboard => Fov::Rectangular(33 << 6, 32 << 6),
-            SPAD::Map4x4Normal => Fov::Rectangular(41 << 6, 52 << 6),
-            SPAD::Map4x4MacroUpper => Fov::MacroRectangular(30 << 6, 17 << 6, 33 << 6),
-            SPAD::Map4x4MacroLower => Fov::MacroRectangular(17 << 6, 30 << 6, 33 << 6),
-            SPAD::Map4x4Narrow => Fov::Rectangular(33 << 6, 42 << 6),
-            SPAD::Map3x6 => Fov::Rectangular(33 << 6, 60 << 6),
+            SPAD::Map3x3Normal => Fov::Rectangular(33 << DEGREE_SHIFT, 32 << DEGREE_SHIFT),
+            SPAD::Map3x3MacroUpper => {
+                Fov::MacroRectangular(30 << DEGREE_SHIFT, 17 << DEGREE_SHIFT, 33 << DEGREE_SHIFT)
+            }
+            SPAD::Map3x3MacroLower => {
+                Fov::MacroRectangular(17 << DEGREE_SHIFT, 30 << DEGREE_SHIFT, 33 << DEGREE_SHIFT)
+            }
+            SPAD::Map3x3Wide => Fov::Rectangular(41 << DEGREE_SHIFT, 52 << DEGREE_SHIFT),
+            SPAD::Map3x3Checkerboard => Fov::Rectangular(33 << DEGREE_SHIFT, 32 << DEGREE_SHIFT),
+            SPAD::Map3x3InvCheckerboard => Fov::Rectangular(33 << DEGREE_SHIFT, 32 << DEGREE_SHIFT),
+            SPAD::Map4x4Normal => Fov::Rectangular(41 << DEGREE_SHIFT, 52 << DEGREE_SHIFT),
+            SPAD::Map4x4MacroUpper => {
+                Fov::MacroRectangular(30 << DEGREE_SHIFT, 17 << DEGREE_SHIFT, 33 << DEGREE_SHIFT)
+            }
+            SPAD::Map4x4MacroLower => {
+                Fov::MacroRectangular(17 << DEGREE_SHIFT, 30 << DEGREE_SHIFT, 33 << DEGREE_SHIFT)
+            }
+            SPAD::Map4x4Narrow => Fov::Rectangular(33 << DEGREE_SHIFT, 42 << DEGREE_SHIFT),
+            SPAD::Map3x6 => Fov::Rectangular(33 << DEGREE_SHIFT, 60 << DEGREE_SHIFT),
         }
     }
     pub fn divisions(&self) -> (u8, u8) {
@@ -145,6 +153,6 @@ impl TmfConfiguration {
     }
     pub fn set_i2c_addr(&mut self, addr: u8) {
         self.config[20] = addr << 1;
-        log::info!("ADDRESS: {}", self.config[20] >> 1);
+        // log::info!("ADDRESS: {}", self.config[20] >> 1);
     }
 }

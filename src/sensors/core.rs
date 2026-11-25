@@ -1,5 +1,5 @@
 pub mod utils;
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum SensorType {
     TMF8821,
 }

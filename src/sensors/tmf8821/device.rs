@@ -62,11 +62,11 @@ pub struct Measurement {
     spad: SPAD,
 }
 impl Measurement {
-    pub fn to_sensor_data(&self, mode: SPAD) -> [Option<SensorData>; 18] {
+    pub fn to_sensor_data(&self) -> [Option<SensorData>; 18] {
         let mut res: [Option<SensorData>; 18] = [const { None }; 18];
-        let vp = mode.as_view();
+        let vp = self.spad.as_view();
         for (i, item) in res.iter_mut().enumerate().take(self.distances.iter().len()) {
-            let m = mode.index_as_xy(i as u8);
+            let m = self.spad.index_as_xy(i as u8);
             if let Some((x, y)) = m {
                 let segment_vp = vp.get_subdivision(x, y);
                 let sd = SensorData {
@@ -76,7 +76,9 @@ impl Measurement {
                     confidence: self.confidences[i] as u32,
                     max_range: 0,
                 };
-                *item = Some(sd);
+                if self.distances[i] > 0 {
+                    *item = Some(sd);
+                }
             }
         }
         res

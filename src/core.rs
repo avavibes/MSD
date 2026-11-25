@@ -18,7 +18,7 @@ pub struct Alert {
     pub combine: CombineMode,
 }
 pub enum CombineMode {}
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Viewport {
     pub center: (i32, i32),
     pub viewport: (u32, u32),

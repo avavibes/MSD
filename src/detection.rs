@@ -1,4 +1,7 @@
-use crate::sensors::core::{SensorType, utils::Point3D};
+use crate::sensors::core::{
+    SensorType,
+    utils::{Point3D, SensorData},
+};
 
 pub struct DetectionArea {
     pub area: Area3D,
@@ -7,6 +10,26 @@ pub struct DetectionArea {
     pub use_assumed: bool,
 }
 impl DetectionArea {
+    pub fn severity_from_sensordatas(&self, sd: &[Option<SensorData>]) -> Option<(i32, i32)> {
+        let mut max_detection: Option<(i32, i32)> = None;
+        for s in sd.iter().flatten() {
+            let p = s.to_point();
+            // log::info!("Point from 3d data: {p:?}");
+            if p.is_confirmed || (self.use_assumed) {
+                let det = self.area.contains_point(p);
+                if let Some(d) = det {
+                    if let Some(md) = max_detection {
+                        if d.0 < md.0 {
+                            max_detection = Some(d);
+                        }
+                    } else {
+                        max_detection = Some(d);
+                    }
+                }
+            }
+        }
+        max_detection
+    }
     // pub fn point_severities()
 }
 pub struct Area3D {
@@ -16,7 +39,7 @@ pub struct Area3D {
 }
 
 impl Area3D {
-    pub fn contains_point(&self, p: Point3D) -> Option<i32> {
+    pub fn contains_point(&self, p: Point3D) -> Option<(i32, i32)> {
         if !(p.x < self.range_x.1 && p.x > self.range_x.0) {
             return None;
         }
@@ -26,6 +49,6 @@ impl Area3D {
         if !(p.z < self.range_z.1 && p.z > self.range_z.0) {
             return None;
         }
-        Some(p.z)
+        Some((p.z, self.range_z.1))
     }
 }
