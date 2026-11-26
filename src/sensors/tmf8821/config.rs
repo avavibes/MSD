@@ -1,4 +1,4 @@
-use crate::{config::DEGREE_SHIFT, sensors::core::utils::View};
+use crate::{core::math::DEGREE_SHIFT, sensors::core::utils::View};
 
 #[derive(Debug, PartialEq)]
 pub enum TofActiveRange {

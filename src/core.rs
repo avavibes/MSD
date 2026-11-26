@@ -1,5 +1,7 @@
 use crate::sensors::core::SensorType;
 pub mod utils;
+pub mod math;
+
 // const DEGREE_SHIFT: u8 = 12;
 pub struct Sensitivity {
     pub view: Viewport,

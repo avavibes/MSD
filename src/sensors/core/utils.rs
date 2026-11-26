@@ -1,7 +1,5 @@
 use crate::{
-    config::{DEGREE_SHIFT, DEVICE_HEIGHT},
-    core::Viewport,
-    sensors::core::SensorType,
+    config::DEVICE_HEIGHT, core::{Viewport, math::DEGREE_SHIFT}, sensors::core::SensorType,
 };
 #[derive(Debug, Clone, Copy)]
 pub struct SensorData {
