@@ -1,5 +1,12 @@
+use embassy_time::Timer;
+
 use crate::{
-    config::DEVICE_HEIGHT, core::{Viewport, math::DEGREE_SHIFT}, sensors::core::SensorType,
+    config::DEVICE_HEIGHT,
+    core::{
+        Viewport,
+        math::{DEGREE_SHIFT, FixedPoint},
+    },
+    sensors::core::{Sensor, SensorType},
 };
 #[derive(Debug, Clone, Copy)]
 pub struct SensorData {
@@ -23,23 +30,44 @@ impl SensorData {
             }
         };
         log::info!("range {range}");
+
+        Timer::after_millis(1).await;
         log::info!(
             "theta {} {}",
-            self.viewport.center.1,
-            fixed_to_float(self.viewport.center.1)
-        );
-        log::info!(
-            "azimuth {} {}",
-            self.viewport.center.0,
-            fixed_to_float(self.viewport.center.0)
+            self.viewport.center.1.raw(),
+            f64::from(self.viewport.center.1),
         );
 
-        log::info!("{} - {}", range as i64, fpcos(self.viewport.center.1));
-        log::info!("{} - {}", range as i64, fpsin(self.viewport.center.1));
-        log::info!("{} - {}", range as i64, fpcos(self.viewport.center.0));
-        log::info!("{} - {}", range as i64, fpsin(self.viewport.center.0));
+        Timer::after_millis(1).await;
+        log::info!(
+            "azimuth {} {}",
+            self.viewport.center.0.raw(),
+            f64::from(self.viewport.center.0),
+        );
+        Timer::after_millis(1).await;
+
+        log::info!(
+            "{} - {}",
+            range as i64,
+            f64::from(fpcos(self.viewport.center.1))
+        );
+        log::info!(
+            "{} - {}",
+            range as i64,
+            f64::from(fpsin(self.viewport.center.1))
+        );
+        log::info!(
+            "{} - {}",
+            range as i64,
+            f64::from(fpcos(self.viewport.center.0))
+        );
+        log::info!(
+            "{} - {}",
+            range as i64,
+            f64::from(fpsin(self.viewport.center.0))
+        );
     }
-    pub fn to_point(&self) -> Point3D {
+    pub fn to_point(&self, sens: &Sensor) -> Point3D {
         let is_max;
         let range = match self.range {
             Some(s) => {
@@ -62,59 +90,63 @@ impl SensorData {
         // z coordinate is away from device, x coordinate is left/right, and y is up/down
 
         // log::info!("init theta: {}, azimuth: {}", fixed_to_float(self.viewport.center.1), fixed_to_float(self.viewport.center.0));
-        let theta = self.viewport.center.1 + (90 << DEGREE_SHIFT);
-        let azimuth = self.viewport.center.0 + (90 << DEGREE_SHIFT);
-        let sint = fpsin(theta) as i64;
-        let cost = fpcos(theta) as i64;
-        let sina = fpsin(azimuth) as i64;
-        let cosa = fpcos(azimuth) as i64;
+
+        let theta = sens.mount_angle.1 + self.viewport.center.1 + (90);
+        let azimuth = sens.mount_angle.0 + self.viewport.center.0 + (90);
+        let sint = fpsin(theta);
+        let cost = fpcos(theta);
+        let sina = fpsin(azimuth);
+        let cosa = fpcos(azimuth);
         // let rsint = multiply_unfixed_with_fixed(range as i64, fpsin(theta));
         // log::info!("theta: {}, azimuth: {}", fixed_to_float(theta), fixed_to_float(azimuth));
         // log::info!("sint {} cost {} sina {} cosa {}", fixed_to_float(sint as i32), fixed_to_float(cost as i32), fixed_to_float(sina as i32), fixed_to_float(cosa as i32));
         // log::info!("rsint: {rsint}");
         // log::info!("sintsina: {}", fixed_to_float(multiply_fixed(sint, sina) as i32));
-        let y = DEVICE_HEIGHT + -multiply_unfixed_with_fixed(range as i64, cost as i32);
-        let z = multiply_unfixed_with_fixed(range as i64, multiply_fixed(sint, sina) as i32);
-        let x: i32 = -multiply_unfixed_with_fixed(range as i64, multiply_fixed(sint, cosa) as i32);
+        let y: i32 = (cost * (range as i32)).into();
+        let y = y * -1 + DEVICE_HEIGHT;
+        let z = multiply_unfixed_with_fixed(range as i64, (sint * sina).raw());
+        let x: i32 = -multiply_unfixed_with_fixed(range as i64, (sint * cosa).raw());
 
         Point3D {
             is_confirmed: !is_max,
             x,
             y,
             z,
+            sensortype: self.sensor,
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Point3D {
     pub is_confirmed: bool,
     pub x: i32,
     pub y: i32,
     pub z: i32,
+    pub sensortype: SensorType,
 }
 
 pub struct View {
-    pub center: (i32, i32),
-    pub viewport: (u32, u32),
+    pub center: (FixedPoint, FixedPoint),
+    pub viewport: (FixedPoint, FixedPoint),
     pub divisions: (u8, u8),
 }
 impl View {
     pub fn get_subdivision(&self, x: u8, y: u8) -> Viewport {
         let top_left = (
-            self.center.0 - (self.viewport.0 as i32 / 2),
-            self.center.1 + (self.viewport.1 as i32 / 2),
+            self.center.0 - (self.viewport.0 / 2),
+            self.center.1 + (self.viewport.1 / 2),
         );
         // let bottom_right = (
         //     self.center.0 + (self.viewport.0 as i32 / 2),
         //     self.center.1 - (self.viewport.1 as i32 / 2),
         // );
         // log::info!("Top left: {:?}, bottom right: {:?}", (fixed_to_float(top_left.0), fixed_to_float(top_left.1)), (fixed_to_float(bottom_right.0), fixed_to_float(bottom_right.1)));
-        let x_sw = self.viewport.0 / (self.divisions.0 as u32);
-        let y_sw = self.viewport.1 / (self.divisions.1 as u32);
+        let x_sw = self.viewport.0 / (self.divisions.0 as i32);
+        let y_sw = self.viewport.1 / (self.divisions.1 as i32);
         let top_left_of_subdivision = (
-            top_left.0 + (x as i32) * (x_sw as i32),
-            top_left.1 - (y as i32) * (y_sw as i32),
+            top_left.0 + x_sw * (x as i32),
+            top_left.1 - y_sw * (y as i32),
         );
         // let bottom_right_of_subdivision = (
         //     top_left_of_subdivision.0 + (x_sw as i32),
@@ -130,8 +162,8 @@ impl View {
         // log::info!("({x}, {y}) Top left sub: {:?}, bottom right: {:?}", (fixed_to_float(top_left_of_subdivision.0), fixed_to_float(top_left_of_subdivision.1)), (fixed_to_float(bottom_right_of_subdivision.0), fixed_to_float(bottom_right_of_subdivision.1)));
 
         let center_of_subdivision = (
-            top_left_of_subdivision.0 + (x_sw as i32 / 2),
-            top_left_of_subdivision.1 - (x_sw as i32 / 2),
+            top_left_of_subdivision.0 + (x_sw / 2),
+            top_left_of_subdivision.1 - (x_sw / 2),
         );
         Viewport {
             center: center_of_subdivision,
@@ -156,16 +188,17 @@ const LUT: [i32; 181] = [
     24550, 23486, 22414, 21336, 20251, 19160, 18064, 16961, 15854, 14742, 13625, 12504, 11380,
     10252, 9120, 7986, 6850, 5711, 4571, 3429, 2287, 1143, 0,
 ];
-pub fn fpsin(num: i32) -> i32 {
-    let num = num + (360 << DEGREE_SHIFT);
-    let num = num % (360 << DEGREE_SHIFT);
-    let k = num >> DEGREE_SHIFT;
-    let sign: i32 = if num > 180 << DEGREE_SHIFT { -1 } else { 1 };
+pub fn fpsin(num: FixedPoint) -> FixedPoint {
+    let num = num + FixedPoint::from(360);
+    let num = num % (FixedPoint::from(360));
+    let k: i32 = num.into();
+    // let k = num >> DEGREE_SHIFT;
+    let sign: i32 = if num > FixedPoint::from(180) { -1 } else { 1 };
     let k = k % 180;
     // log::info!("angle in: {}", fixed_to_float(num));
     // log::info!("Index: {k}");
 
-    let y1 = LUT[k as usize];
+    let y1 = FixedPoint::raw_from(LUT[k as usize]);
     return y1 * sign;
     // if num % (1 << DEGREE_SHIFT) == 0 {
     //     log::info!("Returning early because {}%{}==0", num, (1<<DEGREE_SHIFT));
@@ -181,8 +214,10 @@ pub fn fpsin(num: i32) -> i32 {
     // y * sign
 }
 
-pub fn fpcos(num: i32) -> i32 {
-    const OFFSET: i32 = 90 << DEGREE_SHIFT;
+pub fn fpcos(num: FixedPoint) -> FixedPoint {
+    const OFFSET: FixedPoint = FixedPoint {
+        num: 90 << DEGREE_SHIFT,
+    };
     fpsin(num + OFFSET)
 }
 

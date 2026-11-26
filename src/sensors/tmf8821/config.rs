@@ -1,4 +1,7 @@
-use crate::{core::math::DEGREE_SHIFT, sensors::core::utils::View};
+use crate::{
+    core::math::{DEGREE_SHIFT, FixedPoint},
+    sensors::core::utils::View,
+};
 
 #[derive(Debug, PartialEq)]
 pub enum TofActiveRange {
@@ -64,24 +67,30 @@ impl SPAD {
         }
     }
     pub fn as_view(&self) -> View {
-        let center: (i32, i32);
+        let center: (FixedPoint, FixedPoint);
         let width: u32;
         let height: u32;
         match self.fov() {
             Fov::Rectangular(w, h) => {
-                center = (0, 0);
+                center = (FixedPoint::from(0), FixedPoint::from(0));
                 height = h;
                 width = w;
             }
             Fov::MacroRectangular(t, b, w) => {
-                center = (0, ((t as i32 - b as i32) / 2));
+                center = (
+                    FixedPoint::from(0),
+                    FixedPoint::raw_from((t as i32 - b as i32) / 2),
+                );
                 height = t + b;
                 width = w;
             }
         };
         View {
             center,
-            viewport: (width, height),
+            viewport: (
+                FixedPoint::raw_from(width as i32),
+                FixedPoint::raw_from(height as i32),
+            ),
             divisions: self.divisions(),
         }
     }

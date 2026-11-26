@@ -1,10 +1,10 @@
-pub const ENABLE_TMF8821: bool = false;
+pub const ENABLE_TMF8821: bool = true;
 pub const ENABLE_I2S: bool = false;
 pub const ENABLE_HCSR04: bool = false;
 pub const ENABLE_USB_LOGGING: bool = true;
 pub const ENABLE_TEST_FPSIN: bool = false;
 pub const LOOP_SPAD_MAPS: bool = false;
-pub const FIXED_POINT_TEST: bool = true;
+pub const FIXED_POINT_TEST: bool = false;
 
 pub const ENABLE_START_WAIT: bool = true;
 
@@ -22,4 +22,4 @@ pub const I2C1_FREQ: u32 = 400000;
 //
 
 // device height above the ground in mm
-pub const DEVICE_HEIGHT: i32 = 1000;
+pub const DEVICE_HEIGHT: i32 = 800;

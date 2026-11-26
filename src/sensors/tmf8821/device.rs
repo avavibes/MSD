@@ -69,16 +69,23 @@ impl Measurement {
             let m = self.spad.index_as_xy(i as u8);
             if let Some((x, y)) = m {
                 let segment_vp = vp.get_subdivision(x, y);
+                let range = self.distances[i] as u32;
+                let r;
+                if range > 0 {
+                    r = Some(range)
+                } else {
+                    r = None
+                }
                 let sd = SensorData {
                     viewport: segment_vp,
                     sensor: SensorType::TMF8821,
-                    range: Some(self.distances[i] as u32),
+                    range: r,
                     confidence: self.confidences[i] as u32,
                     max_range: 0,
                 };
-                if self.distances[i] > 0 {
-                    *item = Some(sd);
-                }
+                *item = Some(sd);
+            } else {
+                *item = None;
             }
         }
         res
@@ -510,7 +517,7 @@ where
     async fn read_bytes(&mut self, reg: u8, res: &mut [u8]) -> Result<(), Error<I2C::Error>> {
         // let mut res = &target;
         self.i2c.write_read(self.get_address(), &[reg], res).await?;
-        log::info!("Successful read from {}", self.get_address());
+        // log::info!("Successful read from {}", self.get_address());
         Ok(())
     }
     fn sum(res: &[u8]) -> u8 {
@@ -550,7 +557,7 @@ where
             if status > 0x10 {
                 continue;
             }
-            log::info!("BAD VALUE {status}");
+            // log::info!("BAD VALUE {status}");
         }
         Err(Error::NoAck)
     }

@@ -7,13 +7,14 @@ use core::mem;
 use core::panic::PanicInfo;
 
 use bat_device::config::{
-    ENABLE_HCSR04, ENABLE_I2S, ENABLE_START_WAIT, ENABLE_TEST_FPSIN, ENABLE_TMF8821, ENABLE_USB_LOGGING, FIXED_POINT_TEST, I2C0_FREQ, LOOP_SPAD_MAPS, USB_LOG_SIZE,
+    ENABLE_HCSR04, ENABLE_I2S, ENABLE_START_WAIT, ENABLE_TEST_FPSIN, ENABLE_TMF8821,
+    ENABLE_USB_LOGGING, FIXED_POINT_TEST, I2C0_FREQ, LOOP_SPAD_MAPS, USB_LOG_SIZE,
 };
+use bat_device::core::math::{DEGREE_SHIFT, FixedPoint};
 use bat_device::core::utils::panic_wait;
 use bat_device::detection::{Area3D, DetectionArea};
-use bat_device::sensors::core::SensorType;
-use bat_device::core::math::{DEGREE_SHIFT, FixedPoint};
 use bat_device::sensors::core::utils::{fixed_to_float, fpsin};
+use bat_device::sensors::core::{Sensor, SensorType};
 use bat_device::sensors::tmf8821::config::SPAD;
 use bat_device::sensors::tmf8821::device::TMF8821;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
@@ -67,16 +68,31 @@ async fn main(spawner: Spawner) {
             log::info!("Startup wait -- {}", i);
         }
     }
-    if FIXED_POINT_TEST{
+    if FIXED_POINT_TEST {
         let a = FixedPoint::from(3.3);
         let b = FixedPoint::from(7.2);
-        let c = a+b;
-        let d = a*b;
+        let c = a + b;
+        let d = a * b;
 
-        log::info!("FIXED POINT add {}+{}={}", f64::from(a), f64::from(b), f64::from(c));
-        log::info!("FIXED POINT multiply {}*{}={}", f64::from(a), f64::from(b), f64::from(d));
+        log::info!(
+            "FIXED POINT add {}+{}={}",
+            f64::from(a),
+            f64::from(b),
+            f64::from(c)
+        );
+        log::info!(
+            "FIXED POINT multiply {}*{}={}",
+            f64::from(a),
+            f64::from(b),
+            f64::from(d)
+        );
 
-        log::info!("FIXED POINT multiply 2*{}*{}={}", f64::from(a), f64::from(b), f64::from(d*2));
+        log::info!(
+            "FIXED POINT multiply 2*{}*{}={}",
+            f64::from(a),
+            f64::from(b),
+            f64::from(d * 2)
+        );
     }
     if ENABLE_TEST_FPSIN {
         // let vals = [223.94862173466942, 202.45924966826803, 314.2891611206414, 309.4907240026413, 270.8613453291833, 146.79427504801194, 123.53744875671048, 203.0655341872093, 239.20959504611977, 269.11784967746866, 280.9130736046719, 359.86706853308937, 66.80167973992585, 165.80188280171632, 153.87507978389124, 229.64140921653845, 19.174626834008812, 150.51257971691746, 285.6036505730694, 184.62907143786055, 276.8477422837907, 270.00231547319527, 107.2071936407867, 167.21985508945448, 282.8798210833321, 342.01523939221727, 325.7123197856753, 163.44305914386445, 72.00090775204863, 41.02616936214146, 278.9193032158314, 89.48025371858888, 234.84138676860806, 108.3565605143333, 32.99238048602707, 34.24152151154325, 268.92094944710607, 283.23700927025766, 204.9928771359978, 207.61138051990054, 350.805952884948, 256.2017177461483, 228.31491557360914, 220.41926072639802, 304.8987183382827, 316.1032866317256, 20.081040000039422, 7.512444982969164, 252.00117326489362, 87.02365404606891, 22.727629296440046, 60.029077086594285, 135.2738530829712, 118.43567892981368, 278.54296584370496, 200.963133100484, 17.4498060495125, 198.0057494715746, 266.25074781194, 73.33141176373462, 38.47390378200668, 108.64577130283936, 143.55323781199579, 95.50790021461088, 0.7781755194831685, 333.15817956291454, 119.87757687472316, 51.37208745368751, 149.13894279143003, 35.58438912037978, 327.78164409475085, 260.0644331538854, 324.3010953199056, 254.41302505291986, 64.8607693164219, 317.39227335772813, 332.81522019704425, 23.538453602446488, 232.22758237455835, 317.1861220428655, 209.25379187184893, 296.9954949647851, 337.4844745477852, 71.09765615151886, 108.63755094094522, 140.04319936415584, 306.6317591450364, 44.18631229302483, 77.4059338619707, 229.3529244116261, 56.02590880306501, 199.0390605456259, 183.18129519190984, 16.454527181338143, 16.563686426651955, 18.663925665837304, 337.0936386362658, 168.6998862366933, 179.26035180204775, 28.664738014518313, 94.47255489988257, 35.42030231435922, 195.42099649958067, 195.42157683690584, 136.1702355265394, 270.3979891490368, 25.901493029073784, 29.686976004774912, 136.08635938140927, 33.0036521992306, 169.74361165501114, 36.27531364607199, 359.5388982575836, 116.47463750131563, 23.61502031820443, 104.60713331514262, 307.277926696584, 228.78634573097787, 256.3000982004087, 41.91116779746767, 116.34754286046724, 93.80327436713819, 107.44675907321843, 249.72283040858727, 31.155528759669757, 40.53813271774146, 180.02082810099054, 75.16118904175536, 269.7662671713442, 283.2470444715448, 251.904041435066, 277.9255182262909, 306.6811933402882, 299.9281682448227, 169.71732886020317, 44.41143968459799, 55.66408870630774, 105.85798479646043, 19.37073180949752, 355.8511328886569, 92.17034313324453, 144.48367001836513, 173.0168253677932, 319.518720927628, 173.0577502563313, 19.91901545321003, 321.2980447506058, 140.72255311060164, 143.71992522517596, 251.07922946448912, 69.33557781101571, 82.50849334768206, 250.05437872730116, 23.72028942258102, 76.10381265191033, 75.33335538137368, 33.275026088940855, 80.04839704349355, 25.829128784498412, 86.64517547967688, 119.90220520023821, 154.99686155783874, 87.32349098701717, 107.26083101099215, 96.06439146033686, 163.9682755645013, 202.06680616573803, 158.42256853643974, 179.8776140372664, 342.2460997530257, 77.55185679310148, 114.27240929851214, 248.1015346445377, 87.47502392336938, 1.6665193595452532, 147.91639265652125, 51.094155510960945, 181.25554478074417, 164.85656264380458, 26.29222768235495];
@@ -112,12 +128,13 @@ async fn main(spawner: Spawner) {
         for i in -180..180 {
             // let val = 3.5;
             // let test = vals_i[i];
-            let test = (i << DEGREE_SHIFT) + 5;
-            // let test = (val * ((1 << DEGREE_SHIFT) as f64)) as i32;
-            // let test_as_f = fixed_to_float(test);
+            let test = FixedPoint::from(i);
+            // let test = FixedPoint::raw_from((i << DEGREE_SHIFT) + 5);
+            // // let test = (val * ((1 << DEGREE_SHIFT) as f64)) as i32;
+            // // let test_as_f = fixed_to_float(test);
             let fastsin = fpsin(test);
-            // results2[i] = fastsin;
-            log::info!("{}", fixed_to_float(fastsin));
+            // // results2[i] = fastsin;
+            log::info!("{}", f64::from(fastsin));
             Timer::after_millis(1).await;
             // let as_f = fixed_to_float(fastsin);
             // let fastcos = fpcos(test);
@@ -319,7 +336,7 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
     // let _ = sensor.wake().await;
     // log::info!("Wake took {} ms", now.elapsed().as_millis());
 
-    sensor.config.set_spad_map(SPAD::Map3x3Normal);
+    sensor.config.set_spad_map(SPAD::Map4x4Narrow);
 
     // let mut sensor = sensor;
     let r = sensor.write_configuration().await;
@@ -350,23 +367,44 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
     //     }
     // log::info!("SETTING SPAD DIFF");
     log::info!("Creating detection area");
-    let da = DetectionArea {
+    Timer::after_millis(1).await;
+    let floor_da = DetectionArea {
         area: Area3D {
-            range_x: (-300, 300),
-            range_y: (0, 2000),
-            range_z: (-100, 4000),
+            range_x: (-230, 230),
+            range_y: (100, 300),
+            range_z: (-100, 2000),
         },
         sensor: [Some(SensorType::TMF8821), None, None, None, None, None],
         group: 0,
         use_assumed: false,
     };
-
+    let main_da = DetectionArea {
+        area: Area3D {
+            range_x: (-230, 230),
+            range_y: (300, 1600),
+            range_z: (-100, 2000),
+        },
+        sensor: [Some(SensorType::TMF8821), None, None, None, None, None],
+        group: 0,
+        use_assumed: false,
+    };
+    let sens = Sensor {
+        sensor: SensorType::TMF8821,
+        mount_position: (0, 0),
+        mount_angle: (FixedPoint::from(0), FixedPoint::from(-30)),
+        enabled: true,
+        error: true,
+    };
+    Timer::after_millis(1).await;
     loop {
         // log::info!("AAAAAAAAAA");
         let res = sensor.single_measurement().await;
-
+        // log::info!("Took single measurement");
+        // Timer::after_millis(1).await;
         if let Ok(res) = res {
             let datas = res.to_sensor_data();
+            // log::info!("got datas");
+            // Timer::after_millis(1).await;
             // for s in datas{
             //     // log::info!(s);
             //     log::info!("{s:?}");
@@ -375,22 +413,50 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
             //         log::info!("{:?}", p.to_point());
             //     }
             // }
-            for s in datas.iter().flatten() {
-                log::info!("{s:?}");
-                let dets = da.severity_from_sensordatas(&[Some(*s)]);
-                log::info!("{dets:?}");
-                Timer::after_millis(1).await;
-                // panic_wait("msg").await;
+            let mut points = [const { None }; 36];
+            for i in 0..18 {
+                if let Some(d) = datas[i] {
+                    points[i] = Some(d.to_point(&sens))
+                }
             }
-
-            let dets = da.severity_from_sensordatas(&datas);
-            log::info!("{dets:?}");
+            log::info!("");
+            log::info!("Data group: ");
+            log::info!("Floor");
+            for s in points.iter().flatten() {
+                // //     // log::info!("{s:?}");
+                // //     // Timer::after_millis(1).await;
+                // //     // s.print().await;
+                // //     Timer::after_millis(1).await;
+                let dets = floor_da.severity_from_points(&[Some(*s)]);
+                // log::info!("{dets:?}");
+                // //     // panic_wait("msg").await;
+            }
+            log::info!("\nMain");
+            for s in points.iter().flatten() {
+                // //     // log::info!("{s:?}");
+                // //     // Timer::after_millis(1).await;
+                // //     // s.print().await;
+                // //     Timer::after_millis(1).await;
+                let dets = main_da.severity_from_points(&[Some(*s)]);
+                // log::info!("{dets:?}");
+                // //     // panic_wait("msg").await;
+            }
+            
+            // let dets = da.severity_from_points(&points);
+            // log::info!("");
+            // // log::info!("{points:?}");
+            // log::info!("{dets:?}");
+            // if dets.unwrap_or((5000, 5000)).0 < 2000{
+            //     log::info!("ALERT");
+            // }
             // log::info!("{res}");
-            panic_wait("msg").await;
+            // panic_wait("msg").await;
         } else {
             log::info!("Failed to get sensor measurement!!!");
             Timer::after_millis(1000).await;
         }
+
+        Timer::after_millis(250).await;
         // panic_wait("exited").await;
     }
 }

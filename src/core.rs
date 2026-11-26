@@ -1,6 +1,6 @@
-use crate::sensors::core::SensorType;
-pub mod utils;
+use crate::{core::math::FixedPoint, sensors::core::SensorType};
 pub mod math;
+pub mod utils;
 
 // const DEGREE_SHIFT: u8 = 12;
 pub struct Sensitivity {
@@ -22,8 +22,8 @@ pub struct Alert {
 pub enum CombineMode {}
 #[derive(Debug, Clone, Copy)]
 pub struct Viewport {
-    pub center: (i32, i32),
-    pub viewport: (u32, u32),
+    pub center: (FixedPoint, FixedPoint),
+    pub viewport: (FixedPoint, FixedPoint),
 }
 // impl Viewport{
 //     pub fn from_degrees(center: (i32, i32), viewport: (u32, u32)) -> Self{
