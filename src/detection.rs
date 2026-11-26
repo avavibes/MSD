@@ -1,10 +1,4 @@
-use crate::{
-    core::math::FixedPoint,
-    sensors::core::{
-        SensorType,
-        utils::{Point3D, SensorData},
-    },
-};
+use crate::sensors::core::{SensorType, utils::Point3D};
 
 pub struct DetectionArea {
     pub area: Area3D,
@@ -35,14 +29,10 @@ impl DetectionArea {
                 }
             }
         }
-        if let Some(md) = max_detection {
-            Some(DetectionResult {
-                range: md.0,
-                max_range: md.1,
-            })
-        } else {
-            None
-        }
+        max_detection.map(|md| DetectionResult {
+            range: md.0,
+            max_range: md.1,
+        })
     }
     // pub fn severity_from_sensordatas(&self, sd: &[Option<SensorData>]) -> Option<(i32, i32)> {
     //     let mut max_detection: Option<(i32, i32)> = None;

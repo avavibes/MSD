@@ -70,12 +70,7 @@ impl Measurement {
             if let Some((x, y)) = m {
                 let segment_vp = vp.get_subdivision(x, y);
                 let range = self.distances[i] as u32;
-                let r;
-                if range > 0 {
-                    r = Some(range)
-                } else {
-                    r = None
-                }
+                let r = if range > 0 { Some(range) } else { None };
                 let sd = SensorData {
                     viewport: segment_vp,
                     sensor: SensorType::TMF8821,

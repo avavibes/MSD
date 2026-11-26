@@ -10,10 +10,10 @@ use bat_device::config::{
     ENABLE_HCSR04, ENABLE_I2S, ENABLE_START_WAIT, ENABLE_TEST_FPSIN, ENABLE_TMF8821,
     ENABLE_USB_LOGGING, FIXED_POINT_TEST, I2C0_FREQ, LOOP_SPAD_MAPS, USB_LOG_SIZE,
 };
-use bat_device::core::math::{DEGREE_SHIFT, FixedPoint};
+use bat_device::core::math::FixedPoint;
 use bat_device::core::utils::panic_wait;
 use bat_device::detection::{Area3D, DetectionArea};
-use bat_device::sensors::core::utils::{fixed_to_float, fpsin};
+use bat_device::sensors::core::utils::fpsin;
 use bat_device::sensors::core::{Sensor, SensorType};
 use bat_device::sensors::tmf8821::config::SPAD;
 use bat_device::sensors::tmf8821::device::TMF8821;
@@ -22,7 +22,6 @@ use embassy_executor::Spawner;
 use embassy_rp::config::Config;
 use embassy_rp::gpio::{Input, Level, Output, Pull};
 use embassy_rp::i2c::{self, Async, I2c};
-use embassy_rp::pac::qmi::vals::Iwidth::S;
 use embassy_rp::peripherals::{DMA_CH0, I2C0, PIO0, USB};
 use embassy_rp::pio::{self, Pio};
 use embassy_rp::pio_programs::i2s::{PioI2sOut, PioI2sOutProgram};
@@ -427,7 +426,7 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
                 // //     // Timer::after_millis(1).await;
                 // //     // s.print().await;
                 // //     Timer::after_millis(1).await;
-                let dets = floor_da.severity_from_points(&[Some(*s)]);
+                let _ = floor_da.severity_from_points(&[Some(*s)]);
                 // log::info!("{dets:?}");
                 // //     // panic_wait("msg").await;
             }
@@ -437,11 +436,11 @@ async fn i2c_task_a(i2c_bus: &'static I2cBus, pin: Output<'static>) {
                 // //     // Timer::after_millis(1).await;
                 // //     // s.print().await;
                 // //     Timer::after_millis(1).await;
-                let dets = main_da.severity_from_points(&[Some(*s)]);
+                let _ = main_da.severity_from_points(&[Some(*s)]);
                 // log::info!("{dets:?}");
                 // //     // panic_wait("msg").await;
             }
-            
+
             // let dets = da.severity_from_points(&points);
             // log::info!("");
             // // log::info!("{points:?}");
