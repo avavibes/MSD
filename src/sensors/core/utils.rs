@@ -199,7 +199,12 @@ pub fn fpsin(num: FixedPoint) -> FixedPoint {
     // log::info!("Index: {k}");
 
     let y1 = FixedPoint::raw_from(LUT[k as usize]);
-    return y1 * sign;
+    let y2 = FixedPoint::raw_from(LUT[(k + 1) as usize]);
+    let x1 = FixedPoint::from(0);
+    let x2 = FixedPoint::from(1);
+    let x = FixedPoint::raw_from(num.raw() % FixedPoint::from(1).raw());
+    let y = (y1 * (x2 - x) + y2 * (x - x1)) / (x2 - x1);
+    return y * sign;
     // if num % (1 << DEGREE_SHIFT) == 0 {
     //     log::info!("Returning early because {}%{}==0", num, (1<<DEGREE_SHIFT));
     //     return y1 * sign;

@@ -11,7 +11,11 @@ impl FixedPoint {
     pub fn raw_from(num: i32) -> FixedPoint {
         FixedPoint { num }
     }
+    // pub fn sin(&self) -> FixedPoint{
+
+    // }
 }
+
 // pub struct FixedPointBig {
 //     num: i64,
 // }
@@ -117,6 +121,16 @@ impl PartialOrd for FixedPoint {
         self.num.partial_cmp(&other.num)
     }
 }
+impl Div for FixedPoint {
+    type Output = FixedPoint;
+
+    fn div(self, rhs: FixedPoint) -> Self::Output {
+        FixedPoint {
+            num: (((self.num as i64) << DEGREE_SHIFT) / rhs.num as i64) as i32,
+        }
+    }
+}
+
 impl Div<i32> for FixedPoint {
     type Output = FixedPoint;
 

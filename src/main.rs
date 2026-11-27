@@ -5,10 +5,12 @@
 
 use core::mem;
 use core::panic::PanicInfo;
+use core::sync::atomic::{AtomicI32, Ordering};
 
 use bat_device::config::{
-    ENABLE_HCSR04, ENABLE_I2S, ENABLE_START_WAIT, ENABLE_TEST_FPSIN, ENABLE_TMF8821,
-    ENABLE_USB_LOGGING, FIXED_POINT_TEST, I2C0_FREQ, LOOP_SPAD_MAPS, USB_LOG_SIZE,
+    ENABLE_HCSR04, ENABLE_I2S, ENABLE_LED_BLINK, ENABLE_START_WAIT, ENABLE_TEMP_SENSOR_HCSR04,
+    ENABLE_TEST_FPSIN, ENABLE_TMF8821, ENABLE_USB_LOGGING, ENABLE_WATCHDOG_PANIC, FIXED_POINT_TEST,
+    I2C0_FREQ, LOOP_SPAD_MAPS, USB_LOG_SIZE,
 };
 use bat_device::core::math::FixedPoint;
 use bat_device::core::utils::panic_wait;
@@ -19,21 +21,25 @@ use bat_device::sensors::tmf8821::config::SPAD;
 use bat_device::sensors::tmf8821::device::TMF8821;
 use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 use embassy_executor::Spawner;
+use embassy_rp::adc::{Adc, Channel, Config as AdcConfig};
 use embassy_rp::config::Config;
 use embassy_rp::gpio::{Input, Level, Output, Pull};
 use embassy_rp::i2c::{self, Async, I2c};
-use embassy_rp::peripherals::{DMA_CH0, I2C0, PIO0, USB};
+use embassy_rp::peripherals::{ADC_TEMP_SENSOR, DMA_CH0, I2C0, PIO0, USB};
 use embassy_rp::pio::{self, Pio};
 use embassy_rp::pio_programs::i2s::{PioI2sOut, PioI2sOutProgram};
-use embassy_rp::{bind_interrupts, dma, usb};
+use embassy_rp::{adc, bind_interrupts, dma, usb};
 use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 use embassy_sync::mutex::Mutex;
+use embassy_task_watchdog::embassy_rp::{TaskWatchdog, WatchdogRunner};
+use embassy_task_watchdog::{WatchdogConfig, create_watchdog};
 use embassy_time::{Delay, Duration, Instant, Timer};
 use hcsr04_async::{DistanceUnit, Hcsr04, Now, TemperatureUnit};
 use static_cell::StaticCell;
 
 type I2cBus = Mutex<NoopRawMutex, I2c<'static, I2C0, Async>>;
 
+static SHARED_TEMP: AtomicI32 = AtomicI32::new(0);
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     loop {
@@ -45,6 +51,7 @@ bind_interrupts!(struct Irqs {
     USBCTRL_IRQ => usb::InterruptHandler<USB>;
     PIO0_IRQ_0 => pio::InterruptHandler<PIO0>;
     DMA_IRQ_0 => dma::InterruptHandler<DMA_CH0>;
+    ADC_IRQ_FIFO => adc::InterruptHandler;
 });
 
 #[embassy_executor::task]
@@ -57,6 +64,15 @@ async fn logger_task(usb: embassy_rp::Peri<'static, embassy_rp::peripherals::USB
 #[embassy_executor::main()]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Config::default());
+    let mut adc = Adc::new(p.ADC, Irqs, adc::Config::default());
+    // let temp_val: AtomicI32 = AtomicI32::new(FixedPoint::from(22).raw());
+    // let temp_value = FixedPoint::from(22);
+    // static TEMP_VAL: StaticCell<Mutex<NoopRawMutex, FixedPoint>> = StaticCell::new();
+    // let temp_val = TEMP_VAL.init(Mutex::new(temp_value));
+    // // let i2c_bus = I2C_BUS.init(Mutex::new(i2c));
+    // if ENABLE_TEMP_SENSOR_HCSR04{
+    //     spawner.spawn(temp_sensor_task(p.))
+    // }
     if ENABLE_USB_LOGGING {
         spawner.spawn(logger_task(p.USB).unwrap());
     }
@@ -128,6 +144,7 @@ async fn main(spawner: Spawner) {
             // let val = 3.5;
             // let test = vals_i[i];
             let test = FixedPoint::from(i);
+            let test = test + FixedPoint::raw_from(1);
             // let test = FixedPoint::raw_from((i << DEGREE_SHIFT) + 5);
             // // let test = (val * ((1 << DEGREE_SHIFT) as f64)) as i32;
             // // let test_as_f = fixed_to_float(test);
@@ -191,11 +208,90 @@ async fn main(spawner: Spawner) {
         );
         spawner.spawn(i2s_task_a(i2s, fade_input).unwrap());
     }
+
     if ENABLE_HCSR04 {
         let trigger_pin = Output::new(p.PIN_21, Level::Low);
         let echo_pin = Input::new(p.PIN_22, Pull::Down);
+        // if ENABLE_TEMP_SENSOR_HCSR04 {
+
+        // }
+
+        // let temp = adc.read(&mut ts).await.unwrap();
+        // log::info!("Temp: {} degrees", f64::from(convert_to_celsius(temp)));
         spawner.spawn(hcsr04_task(trigger_pin, echo_pin).unwrap());
     }
+    if ENABLE_LED_BLINK {
+        let led = Output::new(p.PIN_25, Level::Low);
+        spawner.spawn(led_flash(led).unwrap());
+    }
+    // let temp_channel = Channel
+    let mut p26 = Channel::new_pin(p.PIN_26, Pull::None);
+    let mut p27 = Channel::new_pin(p.PIN_27, Pull::None);
+    let mut p28 = Channel::new_pin(p.PIN_28, Pull::None);
+
+    // loop {
+    //     let temp = adc.read(&mut ts).await.unwrap();
+    //     log::info!("Temp: {} degrees", f64::from(convert_to_celsius(temp)));
+    //     Timer::after_millis(1).await;
+    // }
+
+    if ENABLE_WATCHDOG_PANIC {
+        let (watchdog, watchdogtask) = create_watchdog!(p.WATCHDOG, WatchdogConfig::default());
+        spawner.spawn(watchdog_task(watchdogtask).unwrap());
+        spawner.spawn(feed_watchdog(watchdog).unwrap());
+    }
+    if ENABLE_TEMP_SENSOR_HCSR04 {
+        let mut ts = Channel::new_temp_sensor(p.ADC_TEMP_SENSOR);
+        loop {
+            let temp = adc.read(&mut ts).await.unwrap();
+            Timer::after_millis(500).await;
+            let val = convert_to_celsius(temp);
+            SHARED_TEMP.store(val.num, Ordering::Relaxed);
+        }
+    }
+}
+
+#[embassy_task_watchdog::task(timeout = Duration::from_millis(1500))]
+async fn feed_watchdog(watchdog: TaskWatchdog) -> ! {
+    loop {
+        watchdog.feed().await;
+        Timer::after_millis(750).await;
+    }
+}
+#[embassy_executor::task]
+async fn watchdog_task(watchdog: WatchdogRunner) -> ! {
+    watchdog.run().await
+}
+#[embassy_executor::task]
+async fn led_flash(mut led: Output<'static>) {
+    loop {
+        led.set_high(); // Turn on the LED
+        Timer::after_millis(200).await;
+
+        led.set_low(); // Turn off the LED
+        Timer::after_millis(200).await;
+    }
+}
+#[embassy_executor::task]
+async fn panic_after(millis: u64) {
+    Timer::after_millis(millis).await;
+    panic!();
+}
+
+fn convert_to_celsius(raw_temp: u16) -> FixedPoint {
+    // According to chapter 4.9.5. Temperature Sensor in RP2040 datasheet
+    let temp = FixedPoint::from(raw_temp as i32);
+    let temp = FixedPoint::from(27)
+        - (temp * FixedPoint::from(3.3) / FixedPoint::from(4096) - FixedPoint::from(0.706))
+            / FixedPoint::from(0.001721);
+    let sign = if temp < FixedPoint::from(0) {
+        FixedPoint::from(-1)
+    } else {
+        FixedPoint::from(1)
+    };
+    return temp * sign;
+    // let rounded_temp_x10: i16 = ((temp * 10.0) + 0.5 * sign) as i16;
+    // (rounded_temp_x10 as f32) / 10.0
 }
 #[embassy_executor::task]
 async fn hcsr04_task(trigger_pin: Output<'static>, echo_pin: Input<'static>) {
@@ -217,7 +313,7 @@ async fn hcsr04_task(trigger_pin: Output<'static>, echo_pin: Input<'static>) {
 
     // The temperature of the environment, if known, can be used to adjust the speed of sound.
     // If unknown, an average estimate must be used.
-    let temperature = 24.0;
+    let temperature: f64 = (FixedPoint::raw_from(SHARED_TEMP.load(Ordering::Relaxed))).into();
 
     loop {
         let distance = sensor.measure(temperature).await;
